@@ -843,6 +843,159 @@ int main() {
 ## 9. std::string
 - The easiest way to work with strings and string objects in C++ is via the `std::string`/`<string>`
 
+### 9.0. C Strings
+- [Reference](https://www.embeddedrelated.com/showarticle/1519.php)
+- A ‘C-Style’ string is any null-terminated byte string, where this is a sequence of nonzero bytes followed by a byte with zero (0) value (the terminating null character). The terminating null character is represented as the character literal '\0';
+- The length of an NTBS is the number of elements that precede the terminating null character. An empty NTBS has a length of zero.
+- The size of an NTBS is the size of the entire array, including the terminating null character.
+- A single quotes (') are used to identify character literals.
+- A double quotes ('') are used to identify string literals (constant).
+
+- String literals are stored in your program image, usually in a read-only section (.rodata),
+1. The ways to create strings:
+```c
+// *1. Ptr
+char* strMessagePtr= "abc";
+// sizeof(strMessage) = 32 or 64 (ptr)
+strMessagePtr[0] = 1; // error, ptr to const
+
+// *1. Arrays
+char strMessage[] = "abc";
+// sizeof(strMessage ) = 4 
+strMessage[1] = 'a'; // OK
+```
+- For `strMessage`, the memory for the array is allocated on the stack at runtime. The compiler initialises it from the string literal. At runtime, the program memory copies the string literal into the array 
+- For `strMessagePtr`, only the address of the string literal is held on the stack, and there is no copying of string literal.
+
+2. Characters
+- Null: `\0`, `0x00`, `NULL`
+- Carriage Return And New Line: `\r\n`
+- Case switching: `'A' ^ ' '` & `'a' ^ ' '`
+- Special: `\\`, 
+
+3. C String Lib
+- Copying strings : `strcpy`, `strncpy`
+- Concatenating strings: `strcat`, `strncat`
+- Comparing strings: `strcmp`, `strncmp`
+- Parsing strings: `strtok`, `strcspn`
+- Length: `strlen`
+- Examples:
+```cpp
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+    // -------------------------------
+    // 1. Copying strings
+    // -------------------------------
+    char src[] = "Hello";
+    char dst[20];
+
+    strcpy(dst, src);           // copy full string
+    // dst = "Hello"
+
+    strncpy(dst, "World", 3);   // copy only 3 chars
+    dst[3] = '\0';              // ensure null-termination
+    // dst = "Wor"
+
+    // -------------------------------
+    // 2. Concatenating strings
+    // -------------------------------
+    char text[20] = "Hi";
+    strcat(text, " there");     // append full string
+    // text = "Hi there"
+
+    strncat(text, "!!!", 2);    // append only 2 chars
+    // text = "Hi there!!"
+
+    // -------------------------------
+    // 3. Comparing strings
+    // -------------------------------
+    int r1 = strcmp("abc", "abc");   // r1 = 0  (equal)
+    int r2 = strcmp("abc", "abd");   // r2 < 0  (abc < abd)
+    int r3 = strncmp("abcdef", "abcxyz", 3); // r3 = 0 (first 3 chars equal)
+
+    // -------------------------------
+    // 4. Parsing strings
+    // -------------------------------
+    char line[] = "A,B,C";
+    char* token = strtok(line, ",");  // first token: "A"
+    while (token != NULL) {
+        printf("token: %s\n", token);
+        token = strtok(NULL, ",");
+    }
+
+    // strcspn: find first occurrence of any chars in reject set
+    char sample[] = "hello123world";
+    size_t pos = strcspn(sample, "0123456789");
+    // pos = 5 (first digit is at index 5)
+
+    // -------------------------------
+    // 5. Length
+    // -------------------------------
+    size_t len = strlen("abc");  // len = 3
+
+    return 0;
+}
+```
+
+4. String/numbers conversion
+- Integer to String: `itoa()` (non-standard)
+- String to Double: `atof()`
+- String to Double (with error checking): `strtod()`
+- String to Long (with base + error checking): `strtol()`
+- e.g.
+```c
+#include <stdio.h>
+#include <stdlib.h>   // atof, strtod, strtol
+#include <string.h>   // itoa (non-standard on some compilers)
+
+int main() {
+    // -------------------------------
+    // 1. Integer → String (itoa)
+    // -------------------------------
+    char buf[32];
+    itoa(1234, buf, 10);   // convert integer to string in base 10
+    // buf = "1234"
+
+    itoa(255, buf, 16);    // convert to hex
+    // buf = "ff"
+
+    // -------------------------------
+    // 2. String → Double (atof)
+    // -------------------------------
+    double d1 = atof("3.14159");
+    // d1 = 3.14159
+
+    double d2 = atof("12.5xyz"); 
+    // d2 = 12.5 (atof stops at non-numeric chars)
+
+    // -------------------------------
+    // 3. String → Double (strtod)
+    // -------------------------------
+    char* end;
+    double d3 = strtod("45.67abc", &end);
+    // d3 = 45.67
+    // end -> "abc"
+
+    // -------------------------------
+    // 4. String → Long (strtol)
+    // -------------------------------
+    long v1 = strtol("1234", NULL, 10);
+    // v1 = 1234 (decimal)
+
+    long v2 = strtol("FF", NULL, 16);
+    // v2 = 255 (hex → decimal)
+
+    char* end2;
+    long v3 = strtol("100xyz", &end2, 10);
+    // v3 = 100
+    // end2 -> "xyz"
+
+    return 0;
+}
+```
+
 ### 9.1. std::cout << , std::cin >> , std::getLine(std::cin >> std::ws, std::string string)
 - `std::ws` tells `std::cin` to ignore leading whitespace(tab/enter/newline(s)) before extraction.  
 - `std::string::length` returns length of a string that does not included the null terminator character.
@@ -2242,6 +2395,24 @@ int main() {
     return 0;
 }
 ```
+
+### 19.0. Shallow copying & Deep copying
+- **Shallow copying:**
+  - C++ does not know much about our class, so the `default copy constructor` and `default assignment operators` use memberwise copy and then `copy each member of the class individually`.
+  - Simple classes => work well.
+  - Classes handling dynamically allocated memory => just copy the address of the pointer => does not allocate any memory => causes problems.
+
+- **Deep copying:**
+  - Allocates memory for the copy and then copies the actual values, so that the copy lives in memory distinct from the source.
+  - The original and the copy will not affect each other in any way.
+  - This requires write our own `default copy constructor` and `default assigment operators`
+
+- **Role of three:**
+>If a class requires a user-defined destructor, a user-defined copy constructor, or a user-defined copy assignment operator, it almost certainly requires all three.This ensures proper resource management and avoids shallow copy problems.
+- **Role of five:**
+>Extends the Rule of Three in C++11 and later. In addition to the destructor, copy constructor, and copy assignment operator, it includes the move constructor and move assignment operator. This allows efficient transfer of resources instead of copying.
+- **Role of zero:**
+>The best practice is to write classes that do not manage resources directly, letting the compiler generate all special member functions automatically. This avoids the need to define destructors or copy/move operations manually.
 
 ### 19.1. Introduce
 - A class is a program-defined compound type that can have many member variables with **different types** (this point is different from structure).
