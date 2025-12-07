@@ -66,6 +66,17 @@ If you’re new to container images, think of them as a standardized package tha
 3.5. Docker Hub
 To share your Docker images, you need a place to store them. This is where registries come in. While there are many registries, Docker Hub is the default and go-to registry for images. Docker Hub provides both a place for you to store your own images and to find images from others to either run or use as the bases for your own images.
 
+3.6. Docker Instructions
+- Note:
+  - The build context is the set of files and folders on your host machine that Docker sends to the Docker daemon when you run:
+  - The dot (.) at the end of this command tells Docker:        “Use the current directory as the build context.”, the folder contain `Dockerfile`
+```bash
+# Create a new build stage from a base image
+FROM
+
+
+
+```
 
 4. Getting Started
 - Create, build and push your first image: https://docs.docker.com/get-started/introduction/build-and-push-first-image/

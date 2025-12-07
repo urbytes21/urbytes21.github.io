@@ -411,10 +411,10 @@ public class Main {
 ## 2. Structural Design Patterns. 
 - Structural design patterns explain how to **assemble objects and classes into larger structures**, while keeping these structures flexible and efficient. (ava.util.Arrays#asList())
 ### 2.1. Adapter
-- The adapter pattern is adapting between classes and objects
+- The adapter pattern is adapting between classes and objects.
 - **Use cases:**
-  - when we want to convert the interface of a class into another interface clients expect
-  - make incompatible objects work together.
+  - Convert the interface of a class into another interface clients expect
+  - Make incompatible objects work together.
 
 - **UML:**
 ![image](/images/adapter_pattern.png)
