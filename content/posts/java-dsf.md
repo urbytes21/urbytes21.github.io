@@ -341,4 +341,94 @@ public boolean isAlarmTriggered(AlarmDMContext alarmCtx){
 - Bundle-Activator is the fully qualified name of the BundleActivator implementation that will be used to start and stop the bundle, and it refers to the class we’ve just written. (`Bundle-Activator: activator.TimerPluginActivator`)
 
 2. Create the View
+3. Design
 
+**- org.eclipse.cdt.dsf.service.IDsfService**
+@ConfinedToDsfExecutor(value="getExecutor")
+The interface that all DSF services must implement. It only provides a few features to help manage and identify the services using the OSGI services framework.
+Each service should register itself with OSGI services framework using the BundleContext.registerService() method. And each service should use the session ID that it is registering with as one of the service properties. If there is more than one instance of the service to be instantiated for a given session, additional properties should be used when registering the service to allow clients to uniquely identify the services.
+By convention, all methods of DSF services can be called only on the dispatch thread of the DSF executor that is associated with the service. If a service exposes a method that is to be called on non-dispatch thread, it should be documented so.
+
+**- org.eclipse.cdt.dsf.service.DsfSession**
+@ConfinedToDsfExecutor(value="getExecutor")
+Class to manage DSF sessions. A DSF session is a way to associate a set of DSF services that are running simultaneously and are interacting with each other to provide a complete set of functionality.
+Properties of a session are following:
+1. Each session is associated with a single DSF executor, although there could be multiple sessions using the same executor.
+2. Each session has a unique String identifier, which has to be used by the services belonging to this session when registering with OSGI services.
+3. Each session has its set of service event listeners.
+4. Start and end of each session is announced by events, which are always sent on that session's executor dispatch thread.
+
+- **org.eclipse.cdt.dsf.concurrent.DsfExecutor**
+@ThreadSafe
+DSF executor service. Implementations of this executor must ensure that all runnables and callables are executed in the same thread: the executor's single dispatch thread.
+Note: A DSF executor dispatch thread does not necessarily have to be exclusive to the executor, it could be shared with another event dispatch service, such as the SWT display dispatch thread.
+
+**- org.osgi.framework.ServiceRegistration<S>**
+@ProviderType
+A registered service.
+The Framework returns a ServiceRegistration object when a BundleContext.registerService method invocation is successful. The ServiceRegistration object is for the private use of the registering bundle and should not be shared with other bundles.
+The ServiceRegistration object may be used to update the properties of the service or to unregister the service.
+
+**- org.eclipse.cdt.dsf.service.DsfServicesTracker**
+@ConfinedToDsfExecutor(value="DsfSession.getSession(sessionId).getExecutor()")
+Convenience class to help track DSF services that a given client needs to use. This class is similar to the standard OSGI org.osgi.util.tracker.ServiceTracker class, with a few differences:
+1. This class is assumed to be accessed by a single thread hence it has no synchronization built in, while OSGI ServiceTracker synchronized access to its data.
+2. This class is primarily designed to track multiple services of different type (class), while OSGI ServiceTracker is designed to work with single class type, with optional filtering options.
+3. This class uses knowledge of DSF sessions to help narrow down service references.
+4. OSGI Service tracker explicitly listens to OSGI service startup/shutdown events and it will clear a reference to a service as soon as it's shut down. Since version 2.0, this class listens to service unregister events as an indication of service shutdown. In the case of an unregister event, this class will clear the reference to that service.
+
+That said, it might be more convenient for certain types of clients to use OSGI Service tracker for the additional features it provides.
+The ServiceTracker class simplifies using services from the Framework's service registry.
+
+A **ServiceTracker** object is constructed with search criteria and a ServiceTrackerCustomizer object. A ServiceTracker can use a ServiceTrackerCustomizer to customize the service objects to be tracked. The ServiceTracker can then be opened to begin tracking all services in the Framework's service registry that match the specified search criteria. The ServiceTracker correctly handles all of the details of listening to ServiceEvents and getting and ungetting services.
+The getServiceReferences method can be called to get references to the services being tracked. The getService and getServices methods can be called to get the service objects for the tracked service.
+The ServiceTracker class is thread-safe. It does not call a ServiceTrackerCustomizer while holding any locks. ServiceTrackerCustomizer implementations must also be thread-safe.
+
+Khái niệm chính:
+Bundle (Plugin): Một đơn vị triển khai độc lập, có thể được cài đặt, khởi động, dừng và gỡ bỏ trong môi trường OSGi, mỗi bundle có một BundleContext riêng.
+BundleContext: Cung cấp API cho bundle tương tác với OSGi Runtime (Framework), bao gồm việc lấy cấu hình, đăng ký/lấy dịch vụ, quản lý sự kiện.
+OSGi Service: Các đối tượng Java được đăng ký vào Service Registry và có thể được các bundle khác tìm thấy và sử dụng, tạo thành một "service-oriented architecture" (kiến trúc hướng dịch vụ). 
+
+
+ImmediateInDsfExecutor
+
+Executes immediately in the current thread.
+
+No thread switching, no queue.
+
+Synchronous behavior.
+
+Mainly used for testing, bootstrap, or when you are already on the DSF executor thread.
+
+Dangerous if misused → can break DSF threading rules or cause re-entrancy issues.
+
+In short:
+
+“Run this code right now, on the same thread.”
+
+DefaultDsfExecutor
+
+Uses a dedicated DSF executor thread.
+
+Tasks are queued and executed sequentially.
+
+Asynchronous and thread-safe.
+
+This is the recommended and standard executor for DSF services.
+
+Prevents race conditions and UI freezes.
+
+In short:
+
+“Schedule this code to run later on the DSF thread.”
+
+
+VM Element	Design Patterns
+VM Adapter	Facade, Strategy, Mediator
+VM Provider	Controller, Chain of Responsibility
+VM Node	Composite, Factory, Template Method
+VM Context	Adapter, Value Object, Proxy
+Whole system	MVC/MVVM, Observer, Command, Async
+
+
+> DMContext là một “handle ổn định” đại diện cho một đối tượng trong DSF Data Model, dùng để định danh và truy vấn dữ liệu một cách an toàn trong kiến trúc async.
