@@ -177,7 +177,7 @@ e.g.
 - A symbolic link is a special file that serves as a reference to another file.
 - Reading or writing to a symbolic link is the same as reading or writing to any other file or directory. For example, resolving `logFile` yields `dir/logs/HomeLogFile` (actual)
 
-## 2.4. java.nio.file.Path.java
+## 2.4. **java.nio.file.Path.java**
 - `Path.java`: A Path instance contains the information used to specify the location of a file or directory
 - `Paths.java`: Helper class
 
@@ -227,7 +227,7 @@ e.g.
 ```
 
 
-## 2.5. java.nio.file.Files.java
+## 2.5. **java.nio.file.Files.java**
 - This class offers a rich set of static methods for reading, writing, and manipulating files and directories.
 - The methods works on instances of Path objects.
 

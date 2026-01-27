@@ -222,6 +222,19 @@ boolean state = info.isDirectory();
 ```
 #### 4.1.2. Working With Resources in Other File Systems
 
+### 4.2. org.eclipse.core.runtime.FileLocator
+```java
+String fileLocation = "resources/file.txt";
+Bundle bundle = FrameworkUtil.getBundle(getClass());
+IPath filePath = Path.fromOSString(fileLocation);
+try{
+    InputStream stream = FileLocation.openStream(bundle,filePath,true);
+    // do something with input stream
+    stream.close();
+}catch(IOException e){
+} 
+
+```
 
 ## 5. System property & Dynamic variables
 [refer](https://docs.oracle.com/javase/tutorial/essential/environment/sysprop.html)
