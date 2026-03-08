@@ -151,27 +151,22 @@ vi test.txt
 ```
 
 2.  Enter Insert mode:
-
-```{=html}
-<!-- -->
-```
+``` bash
     i
-
+```
 3.  Type:
 
-```{=html}
-<!-- -->
-```
+``` bash
     Hello Vim
     Learning Vim is fun
+```
 
 4.  Save and quit:
 
-```{=html}
-<!-- -->
-```
+``` bash
     ESC
     :wq
+```
 
 ------------------------------------------------------------------------
 
@@ -185,17 +180,15 @@ vi test.txt
 
 2.  Enable line numbers:
 
-```{=html}
-<!-- -->
-```
+``` bash
     :set number
+```
 
 3.  Jump to line 2:
 
-```{=html}
-<!-- -->
-```
+``` bash
     :2
+```
 
 ------------------------------------------------------------------------
 
