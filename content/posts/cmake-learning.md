@@ -103,8 +103,8 @@ Hello World
 
 - A `CMakeLists.txt` (list file-CML) will exist within any directory where we want to provide instructions to CMake on how to handle files, and operations local to that dir or sub-dir.
 - There are four backbone commands of most CMake usage:
-    - `add_executable() and add_library()` for describing output artifacts the software project wants to produce, 
-    - `target_sources()` for associating input files with their respective output artifacts, and the 
+    - `add_executable() and add_library()` for describing output artifacts the software project wants to produce
+    - `target_sources()` for associating input files with their respective output artifacts 
     - `target_link_libraries()` for associating output artifacts with one another.
 
   
@@ -284,20 +284,119 @@ target_sources(MathFunctions
 )
 ```
 
+## 3. CMake Language
+- The only fundamental types in CMake are:
+  -  `String`: e.g. "abc"
+  -  `Lists`: e.g. "abc;xyz"
+- `set()` command to create a variable as a name for string.
+- `${var}` to access variable's value
+- `message()` command to print 
+- `cmake -P CMakeLists.txt` to run the script mode (not intended to have build software)
 
+e.g.
+```bash
+$ cat CMakeLists.txt
+set(MYVAR "HelloWorld")
+message(${MYVAR})
 
+$ cmake -P CMakeLists.txt
+HelloWorld
+```
 
+- `list(APPEND list "new_item")` for manipulating the lists
+- `foreach(l IN LISTS lists)` to iterate over a list
+e.g.
+```bash
+$ cat CMakeLists.txt
+set(MYVAR "HelloWorld")
+message(${MYVAR})
 
+# create a list
+set(lists "first;second;third") # or set(lists first second third)
+# manipulate the list
+list(APPEND lists "fourth")
+# print out
+message("This is my list: ${lists}")
+# iterate to print each item
+foreach(i IN LISTS lists)
+        message("item: ${i}")
+endforeach()
 
+$ cmake -P CMakeLists.txt
+HelloWorld
+This is my list: first;second;third;fourth
+item: first
+item: second
+item: third
+item: fourth
+```
 
+- `macro(name args)` to create a macro
+- `function(name args)` to create a function
+e.g.
+```bash
+$ cat CMakeLists.txt
+# create a macro
+macro(myM arg)
+        message("myM called with arg: ${arg}")
+endmacro()
 
+# create a function
+function(myF arg)
+        message("myF called with arg:${arg}")
+        myM(${arg})
+endfunction()
 
+# call function
+myF("hello")
 
+$ cmake -P CMakeLists.txt
+HelloWorld
+This is my list: first;second;third;fourth
+item: first
+item: second
+item: third
+item: fourth
+myF called with arg:hello
+myM called with arg: hello
+```
+- "True", "On", "Yes" as `true`
+e.g.
+```bash
+$ cat ConditionalValue.cmake
+if(True)
+  message("Constant Value: True")
+else()
+  message("Constant Value: False")
+endif()
 
+if(ConditionalValue)
+  message("Undefined Variable: True")
+else()
+  message("Undefined Variable: False")
+endif()
 
+set(ConditionalValue True)
 
+if(ConditionalValue)
+  message("Defined Variable: True")
+else()
+  message("Defined Variable: False")
+endif()
 
+$ cmake -P ConditionalValue.cmake
+Constant Value: True
+Undefined Variable: False
+Defined Variable: True
 
+```
+
+- We can organize the project let functions and utilities live in their own `.cmake` files outside the project CMLs and separate from the rest of the build system.
+- We use the `include()` command to incorporate these separate ones.
+```bash
+include(module1.cmake)
+include(module2.cmake)
+```
 
 ## 4. Docker:
 1.  Docker is an open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly. With Docker, you can manage your infrastructure in the same ways you manage your applications. By taking advantage of Docker's methodologies for shipping, testing, and deploying code, you can significantly reduce the delay between writing code and running it in production.
