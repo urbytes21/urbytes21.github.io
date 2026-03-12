@@ -9,7 +9,7 @@ FAseries: ["Themes Guide"]    #indicates that this post is part of a series of r
 aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
 ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
-weight: 11    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
 See plus plus :) .
 
@@ -3885,8 +3885,68 @@ If we do not intend our class to be inherited from, mark our class as final.
 
 ### 21.5. Early binding and late binding
 - `early binding (static binding)`: when a direct call is made to a non-member function or a non-virtual member function, the compiler can determine which function definition should be matched to the call. 
+- e.g.
+    ```cpp
+    #include <iostream>
+    using namespace std;
+    
+    class Animal {
+    public:
+        void speak() {        // NOT virtual
+            cout << "Animal speaks\n";
+        }
+    };
+    
+    class Dog : public Animal {
+    public:
+        void speak() {        // Hides Animal::speak()
+            cout << "Dog barks\n";
+        }
+    };
+    
+    void print(int x) {
+        cout << "int\n";
+    }
+    
+    void print(double x) {
+        cout << "double\n";
+    }
+    
+    int main() {
+        Animal* a = new Dog();
+        a->speak();   // Early binding: Non-virtual member function
+    
+        print(5);      // Early binding: int version chosen at compile time
+    }
+    ```
+
+
 - `late binding (or in the case of virtual function resolution, dynamic dispatch)`: when a function call can’t be resolved until runtime. 
+    ```cpp
+    #include <iostream>
+    using namespace std;
+    
+    class Animal {
+    public:
+        virtual void speak() {   // Virtual!
+            cout << "Animal speaks\n";
+        }
+    };
+    
+    class Dog : public Animal {
+    public:
+        void speak() override {
+            cout << "Dog barks\n";
+        }
+    };
+    
+    int main() {
+        Animal* a = new Dog();
+        a->speak();   // Late binding
+    }
+    ```
 - `virtual table` is a lookup table of functions used to resolve function calls in a dynamic/late binding manner. 
+
 > Early binding/static dispatch = direct function call overload resolution
 Late binding = indirect function call resolution
 Dynamic dispatch = virtual function override resolution 
@@ -4194,6 +4254,16 @@ int main()
 }
 ```
 
+### 22.1. Arithmetic Using Friend Functions ( + - * /)
+- All of the arithmetic operators are binary operators, so they take two operands.
+- There are 2 common ways to overide the operators
+  - Member function: The assignment (=), subscript ([]), function call (()), and member selection (->) operators must be overloaded as member functions, because the language requires them to be.
+  - Nonmember function (friend): we won’t be able to use a member overload if the left operand is either not a class (e.g. int), or it is a class that we can’t modify (e.g. std::ostream).
+- A member operator only works if the left side is an object of the class.
+- e.g.
+```cpp
+
+```
 ## 23. I/O 
 ### 23.1. I/O Streams
 - It is a part of the STL.
