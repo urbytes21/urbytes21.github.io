@@ -9,7 +9,7 @@ FAseries: ["Themes Guide"]    #indicates that this post is part of a series of r
 aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
 ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
-weight: 13    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+weight: 100    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
 Java is a programming language created by James Gosling from Sun Microsystems (Sun) in 1991. Java allows to write a program and run it on multiple operating systems.
 **References:** 

@@ -9,7 +9,7 @@ FAseries: ["Themes Guide"]    #indicates that this post is part of a series of r
 aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
 ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
-weight: 7    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+weight: 100    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
 Explain how to use the DSF.
 [Refer1](https://help.eclipse.org/latest/index.jsp?topic=%2Forg.eclipse.cdt.doc.isv%2Fguide%2Fdsf%2Fintro%2Fdsf_programming_intro.html)
