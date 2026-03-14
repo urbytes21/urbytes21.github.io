@@ -98,6 +98,9 @@ $ ./build/hello
 Hello World
 ```
 
+----
+
+
 ## 2. Getting Started
 - This section help us will be able to describe executables, libraries, source and header files, and the linkage relationship between them.
 
@@ -284,6 +287,8 @@ target_sources(MathFunctions
 )
 ```
 
+----
+
 ## 3. CMake Language
 - The only fundamental types in CMake are:
   -  `String`: e.g. "abc"
@@ -398,56 +403,93 @@ include(module1.cmake)
 include(module2.cmake)
 ```
 
-## 4. Docker:
-1.  Docker is an open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly. With Docker, you can manage your infrastructure in the same ways you manage your applications. By taking advantage of Docker's methodologies for shipping, testing, and deploying code, you can significantly reduce the delay between writing code and running it in production.
+----
 
-2. Install
-docs.docker.com
+## 4. Configuration And Cache Variables
+### 4.1. Cache and normal variables
+- A CMake Cache variables are globally visible variables and persistent vars stored in CMakeCache.
+- They are mainly used to configure build options and allow users to customize the build.
+  - `-D<var>:<type>=<value>`
+    Create or update a cache entry from the command line.
+  - `option()`
+    Define a boolean cache variable and provide a default value.
+  - `set(<var> <value> CACHE <type> <docstring>)`
+    Create or update a cache variable, but it will not overwrite a value that was already set by the user via `-D`.
+  - `set()` / `unset()`
+    Create or remove a normal variable that temporarily shadows the cache variable.
 
-3. Docker Architectures:
-What is an image/Dockerfile?
-- Without going too deep yet, think of a container image as a single package that contains everything needed to run a process. In this case, it will contain a Node environment, the backend code, and the compiled React code.
-- Any machine that runs a container using the image, will then be able to run the application as it was built without needing anything else pre-installed on the machine.
-- A Dockerfile is a text-based script that provides the instruction set on how to build the image. For this quick start, the repository already contains the Dockerfile.
-
-3.1. Images:
-- An image is a read-only template with instructions for creating a Docker container. 
-3.2. Containers: 
-- A container is a runnable instance of an image.
-- https://www.docker.com/resources/what-container/	
-- Containers and virtual machines have similar resource isolation and allocation benefits, but function differently because containers virtualize the operating system instead of hardware. Containers are more portable and efficient.
-
-3.3. Docker registries
-- A Docker registry stores Docker images. Docker Hub is a public registry that anyone can use, and Docker looks for images on Docker Hub by default. You can even run your own private registry.
-- When you use the docker pull or docker run commands, Docker pulls the required images from your configured registry. When you use the docker push command, Docker pushes your image to your configured registry.
-
-3.4. Container images
-If you’re new to container images, think of them as a standardized package that contains everything needed to run an application, including its files, configuration, and dependencies. These packages can then be distributed and shared with others.
-
-3.5. Docker Hub
-To share your Docker images, you need a place to store them. This is where registries come in. While there are many registries, Docker Hub is the default and go-to registry for images. Docker Hub provides both a place for you to store your own images and to find images from others to either run or use as the bases for your own images.
-
-3.6. Docker Instructions
-- Note:
-  - The build context is the set of files and folders on your host machine that Docker sends to the Docker daemon when you run:
-  - The dot (.) at the end of this command tells Docker:        “Use the current directory as the build context.”, the folder contain `Dockerfile`
+- e.g.
 ```bash
-# Create a new build stage from a base image
-FROM
+$ tree
+.
+├── CMakeLists.txt
+├── CMakePresets.json
+├── MathFunctions
+│   ├── CMakeLists.txt
+│   ├── MathFunctions.cxx
+│   └── MathFunctions.h
+└── Tutorial
+    ├── CMakeLists.txt
+    └── Tutorial.cxx
 
+$ cat CMakeLists.txt
+cmake_minimum_required(VERSION 3.23)
 
+project(Tutorial)
 
+# Add a default ON option for a cache variable 
+option(TUTORIAL_BUILD_UTILITIES "Build the Tutorial executable des" ON)
+
+# Add a conditional statement around add_subdirectory(Tutorial)
+if(TUTORIAL_BUILD_UTILITIES)
+        message("Build the Tutorial executable")
+        add_subdirectory(Tutorial)
+endif()
+
+add_subdirectory(MathFunctions)
+
+$ cmake -B build -DTUTORIAL_BUILD_UTILITIES=false
+$ cmake --build build
+$ ls build
+# only build MathFunctions
+CMakeCache.txt  CMakeFiles  Makefile  MathFunctions  cmake_install.cmake
+
+$ cat build/CMakeCache.txt
+// Build the Tutorial executable des
+TUTORIAL_BUILD_UTILITIES:BOOL=false
 ```
 
-4. Getting Started
-- Create, build and push your first image: https://docs.docker.com/get-started/introduction/build-and-push-first-image/
+- `CMAKE_CXX_STANDARD`: C++ standard
 
-## 5. GoogleTest
-- Getting Started:
-https://google.github.io/googletest/quickstart-cmake.html
-my_project$ cmake -S . -B build
-my_project$ cmake --build build
-my_project$ cd build && ctest
+### 4.2. CMakePresets.json
+- CMake Presets is a CMake's built-in way to define reuseable and flexible build configurations
+- This mechanism let us store build configurations in a file
+  - `CMakePresets.json`: for the project and tracked in source control
+  - `CMakeUserPresets.json`: for local user config
 
-- References:
-https://google.github.io/googletest/samples.html
+- We previously running a long commands likes:
+```bash
+cmake -B build -DEXAMPLE_FOO=Bar -DEXAMPLE_QUX=Baz
+```
+- We can now create a `CMakePresents.json`
+```json
+{
+    "version":4,
+    "configurePresets":[
+     {
+        "name": "example-preset", // preset name
+        // "binaryDir": "${sourceDir}/build" // set the build dir to skip -B flag
+        "cacheVariables": { // var configs
+            "EXAMPLE_FOO": "Bar",
+            "EXAMPLE_QUX": "Baz"
+        }
+     }
+    ]
+}
+```
+then use the preset:
+```bash
+cmake -B build --preset example-preset
+```
+
+----
