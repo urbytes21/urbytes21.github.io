@@ -471,7 +471,7 @@ TUTORIAL_BUILD_UTILITIES:BOOL=false
 ```bash
 cmake -B build -DEXAMPLE_FOO=Bar -DEXAMPLE_QUX=Baz
 ```
-- We can now create a `CMakePresents.json`
+- We can now create a `CMakePresents.json` in the CML's folder.
 ```json
 {
     "version":4,
@@ -490,6 +490,404 @@ cmake -B build -DEXAMPLE_FOO=Bar -DEXAMPLE_QUX=Baz
 then use the preset:
 ```bash
 cmake -B build --preset example-preset
+```
+
+----
+
+## 5. CMake Target Commands
+- A target command is one which modifies the properties of the target it is applied to.
+- There are several target commands
+  - Common/Recommended: `target_compile_definitions()` `target_compile_features()` `target_link_libraries()` `target_sources()`
+  - Advanced/Caution: `get_target_property()` `set_target_properties()` `target_compile_options()` `target_link_options()` `target_precompile_headers()`
+  - Esoteric/Footguns: `target_include_directories()` `target_link_directories()`
+
+### 5.1. set_target_property - get_target_properties
+- They give direct access to a target's properties by name
+- e.g.
+```bash
+$ cat CMakeLists.txt
+add_library(mylib)
+# set properties to the target
+set_target_properties(mylib
+        PROPERTIES
+         Key Value
+         Key1 Value1
+)
+
+# get properties from the target
+get_property(KeyVar mylib Key)
+get_property(KeyVar1 mylib Key1)
+
+# print out
+message("Key: ${KeyVar}")
+message("Key1: ${KeyVar1}")
+
+$ cmake -B build
+Key: Value
+Key1: Value1
+```
+
+### 5.2. target_precompile_headers
+- It takes a list of header files, and creates a precompiled header from them.
+- TBD
+
+### 5.3. target_compile_features - target_compile_definitions
+- These two commands are using to communicate language standard and compile definition requirements for the target.
+  - `Feature` command describes a minimum language standard as a target property.
+  - `Definition` command describes compile definitions as target properties.
+- e.g.
+```bash
+target_compile_features(MyTarget PRIVATE cxx_std_20) # std20
+
+target_compile_definitions(MyTarget PRIVATE MY_DEFINITION)
+# In the source code, the definition can be checked using the preprocessor:
+# #ifdef MY_DEFINITION
+# // do something
+# #endif
+```
+
+### 5.4. target_compile_options - target_link_options
+- These two commands are using to specific the options being passed on the compile and link line.
+- e.g.
+```bash
+# Enable warnings when compiling the code
+if(
+  (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
+  (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+)
+  target_compile_options(Tutorial PRIVATE /W3) # default recommended level
+
+elseif(
+  (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
+  (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+)
+  target_compile_options(Tutorial PRIVATE -Wall)  # enable common warnings
+
+endif()
+```
+ 
+### 5.4. target_link_directories - target_include_directories
+- These two commands specify directories used during compilation and linking, and map to the `-L` (.a, .so, .lib, .dll) and `-I` (.h, .hpp) compiler flags. 
+- These commands are typically used when integrating a precompiled or vendored library into a project.
+- e.g.
+```bash
+Vendor$ tree
+.
+├── CMakeLists.txt
+├── include
+│   └── Vendor.h
+└── lib
+    ├── Vendor.cxx
+    ├── Vendor.o
+    └── libVendor.a    # static library , g++ -c Vendor.cxx & ar rvs libVendor.a Vendor.o
+
+$ cat CMakeLists.txt
+add_library(VendorLib INTERFACE) # INTERFACE library, only describes how to use, does not build any thing
+
+# Now target that links VendorLib will automatically compile with:
+# #define TUTORIAL_USE_VENDORLIB
+target_compile_definitions(VendorLib
+    INTERFACE
+    TUTORIAL_USE_VENDORLIB
+)
+
+# Add the include directory to VendorLib to tell the compiler where the headers are.
+# Now any consumer target can write:
+# #include <vendor.h>
+target_include_directories(VendorLib
+        INTERFACE
+         include
+)
+
+# Add the lib directory to VendorLib to tells the linker where to search for libraries.
+target_link_directories(VendorLib
+        INTERFACE
+         lib
+)
+
+#  Add the Vendor archive to VendorLib to tell CMake that anything linking VendorLib must also link Vendor.
+target_link_libraries(VendorLib
+        INTERFACE
+         Vendor
+)
+```
+
+----
+
+## 6. CMake Library Concepts
+- There is an optional argument in `add_library(<name> <type>)` command, it's <type>
+  - `STATIC`: an archive of object files for use when linking other targets. (.a)
+  - `SHARED`: a dynamic library that maybe linked by other targets and loaded at runtime. (.so)
+  - `MODULE`
+  - `OBJECT`
+  - `INTERFACE`: a library target which specifies usage requirements for dependents but does not compile sources and does not produce a library artifact on disk.
+  
+### 6.1. Static and Shared
+- When not given a type, `add_library` will create either a STATIC or SHARED library depending on the `BUILD_SHARED_LIBS`
+- e.g.
+```bash
+add_library(MyLib-static STATIC)
+add_library(MyLib-shared SHARED)
+
+# Depends on BUILD_SHARED_LIBS, true = shared
+add_library(MyLib)
+```
+
+### 6.2 Interface Libraries
+[TBD](https://cmake.org/cmake/help/latest/guide/tutorial/In-Depth%20CMake%20Library%20Concepts.html)
+
+----
+
+## 7. System Introspection
+- CMake provides modules to simplify checks.
+  - CheckIncludeFiles: check one ore more C/C++ header files
+  - CheckCompileFlag: check whether compiler supports a given flag
+  - CheckSourceCompiles: check whether source code can be built for a given language
+  - CheckIPOSupported: interprocedural optimization
+
+- e.g.
+```bash
+$ cat CMakeLists.txt
+include(CheckIncludeFiles)
+check_include_files(emmintrin.h HAS_EMMINTRIN LANGUAGE CXX)
+
+if(HAS_EMMINTRIN)
+  target_compile_definitions(MathFunctions PRIVATE TUTORIAL_USE_SSE2)
+endif()
+
+$ cat test.cpp
+#ifdef TUTORIAL_USE_SSE2
+#  include <emmintrin.h>
+#endif
+```
+
+----
+
+## 8. Custom Commands and Generated Files
+- `add_custom_command()` for a code generator within the project, to add a custom build rule to the generated build system
+- `add_dependencies()`: Add a dependency between top-level targets.
+- `add_custom_target()`: Add a target with no output so it will always be built.
+- `CMAKE_CURRENT_BINARY_DIR`: The path to the binary directory currently being processed.
+
+- e.g.
+```bash
+$ tree
+.
+├── CMakeLists.txt
+├── MakeTable
+│   ├── CMakeLists.txt
+│   └── MakeTable.cxx
+
+$ cat MakeTable/MakeTable.cxx
+# // A simple program that builds a sqrt table
+# #include <cmath>
+# #include <fstream>
+# #include <iostream>
+
+# int main(int argc, char* argv[])
+# {
+#   // make sure we have enough arguments
+#   if (argc < 2) { # arg[0] program names\
+#     return 1;
+#   }
+
+#   std::ofstream fout(argv[1], std::ios_base::out);
+#   bool const fileOpen = fout.is_open();
+#   if (fileOpen) {
+#     fout << "double sqrtTable[] = {" << std::endl;
+#     for (int i = 0; i < 10; ++i) {
+#       fout << sqrt(static_cast<double>(i)) << "," << std::endl;
+#     }
+#     // close the table with a zero
+#     fout << "0};" << std::endl;
+#     fout.close();
+#   }
+#   return fileOpen ? 0 : 1; // return 0 if wrote the file
+# }
+
+$ cat MakeTable/CMakeLists.txt
+# Add a MakeTable executable
+add_executable(MakeTable)
+
+# Add MakeTable.cxx to the MakeTable executable
+target_sources(MakeTable
+  PRIVATE
+    MakeTable.cxx
+)
+
+##############################################################
+# Add a custom command which invokes MakeTable to generate SqrtTable.h
+# MakeTable program → generates SqrtTable.h
+add_custom_command(
+  OUTPUT SqrtTable.h
+  COMMAND MakeTable SqrtTable.h
+  DEPENDS MakeTable
+  VERBATIM
+)
+
+# Add a custom target which depends on SqrtTable.h
+# If SqrtTable.h doesn't exist, the custom command runs.
+add_custom_target(RunMakeTable DEPENDS SqrtTable.h)
+
+##############################################################
+# Add an INTERFACE library to describe the SqrtTable header
+add_library(SqrtTable INTERFACE)
+
+# Add the current binary directory (and optionally the SqrtTable.h FILE)
+#        to a header file set of the interface library
+target_sources(SqrtTable
+  INTERFACE
+    FILE_SET HEADERS
+    BASE_DIRS
+      ${CMAKE_CURRENT_BINARY_DIR}
+    FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/SqrtTable.h
+)
+
+##############################################################
+# Use add_dependencies to ensure the custom target always runs before
+#        targets that depend on the interface library
+add_dependencies(SqrtTable RunMakeTable)
+
+
+$ cmake --build build
+[ 12%] Building CXX object MakeTable/CMakeFiles/MakeTable.dir/MakeTable.o
+[ 25%] Linking CXX executable MakeTable
+[ 25%] Built target MakeTable
+[ 37%] Generating SqrtTable.h
+
+$ cat build/MakeTable/SqrtTable.h
+double sqrtTable[] = {
+0,
+1,
+1.41421,
+1.73205,
+2,
+2.23607,
+2.44949,
+2.64575,
+2.82843,
+3,
+0};
+```
+
+----
+
+## 9. Testing and CTest
+- CTest is a task launcher which runs commands and reports if they have returned value.
+- `enable_testing()`: Enables testing for the current directory
+- `add_test()`: Add a test to the project to be run by `ctest`.
+- `ctest --test-dir build`: To run ctest directly on the build dir with all available tests.
+- `ctest --test-dir build -R specific_test`: with regular expressions
+
+- e.g.
+```bash
+$ cat CMakeLists.txt
+option(BUILD_TESTING "Enable testing and build tests" ON)
+if(BUILD_TESTING)
+  enable_testing()    # enable test
+  add_subdirectory(Tests) # add tests CLM
+endif()
+
+$ cat Tests/CMakeLists.txt
+add_executable(TestMathFunctions)
+
+target_sources(TestMathFunctions
+  PRIVATE
+    TestMathFunctions.cxx    # test source
+)
+
+target_link_libraries(TestMathFunctions
+  PRIVATE
+    MathFunctions # source
+)
+
+function(MathFunctionTest op)
+  add_test(    # add test
+    NAME ${op}    
+    COMMAND TestMathFunctions ${op}
+  )
+endfunction()
+
+MathFunctionTest(add)
+MathFunctionTest(mul)
+MathFunctionTest(sqrt)
+MathFunctionTest(sub)
+
+$ ctest --test-dir build # run all tests
+$ ctest --test-dir build -R sqrt # run sqrt test 
+```
+
+## 10. Installation Commands and Concepts
+[TBD](https://cmake.org/cmake/help/latest/guide/tutorial/Installation%20Commands%20and%20Concepts.html)
+
+## 11. Finding Dependencies
+- CMake provides an extensive toolset for discovering and validating dependencies of different kinds.
+- `find_package()` to import dependencies into the project.
+  - <version> arg
+  - `REQUIRED`: for non-optional dep which should abort  the build if not found
+  - `QUIET` for optional dep
+  - We ensure `find_package()` can discover <package name> by adding the install tree to `CMAKE_PREFIX_PATH`.
+    ```json
+    // /CMakePresets.json
+    "cacheVariables": {
+      "CMAKE_PREFIX_PATH": "${sourceParentDir}/install",
+    }
+    ```
+- `find_file()`: Finds and reports the full path to a named file, this tends to be the most flexible of the find commands.
+- `find_library()`: Finds and reports the full path to a static archive or shared object suitable for use with target_link_libraries().
+- `find_path()`: Finds and reports the full path to a directory containing a file
+- `find_program()`: Finds and reports and invocable name or path for a program. Often used in combination with execute_process() or add_custom_command().
+
+[TBD](https://cmake.org/cmake/help/latest/guide/tutorial/Installation%20Commands%20and%20Concepts.html)
+
+----
+
+## 12. Miscellaneous Features
+### 12.1. Target Aliases
+- Creates an Alias Target, such that <name> can be used to refer to <target>
+```bash
+add_library(MyLib INTERFACE)
+add_library(MyProject::MyLib ALIAS MyLib)
+
+add_executable(mytool main.cpp)
+add_executable(Tutorial::mytool ALIAS mytool)
+```
+
+### 12.2 Generator Expressions
+- `target_compile_definitions(MyApp PRIVATE "MYAPP_BUILD_CONFIG=$<CONFIG>")`
+- `$<CONFIG>` is a CMake Generator Expression:
+  - Debug
+  - Release
+  - RelWithDebInfo
+  - MinSizeRel
+
+### 12.3 Download and build package 
+- **Via FetchContent:**
+```bash
+include(FetchContent)
+
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+
+FetchContent_MakeAvailable(googletest)
+
+# Download GoogleTest
+# Extract the archive
+# Run its CMakeLists.txt
+# Add it to your build using `add_subdirectory()`
+```
+
+- **Install Globally:**
+```bash
+$ sudo apt install googletest # Problem: version mismatch.
+```
+ 
+- **Git Submodules:**
+```bash
+$ git submodule add googletest # Problem: messy repo management.
 ```
 
 ----
