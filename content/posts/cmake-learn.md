@@ -634,6 +634,26 @@ add_library(MyLib)
 ```
 
 ### 6.2 Interface Libraries
+- Interface libraries are those which only communicate usage requirements for other targets, they do not produce any artifacts.
+- It's use to create a header-only library, providing the necessary flags for the executable.
+- e.g.
+```bash
+$ cat MathFunctions/MathLogger/CMakeLists.txt¶
+add_library(MathLogger INTERFACE)
+
+target_sources(MathLogger
+  INTERFACE
+    FILE_SET HEADERS
+)
+
+$ cat MathFunctions/MathFunctions.cxx
+add_subdirectory(MathLogger)
+
+$ cat MathFunctions/file.cpp
+#include <MathLogger.h>
+```
+
+### 6.3. Object Libraries
 [TBD](https://cmake.org/cmake/help/latest/guide/tutorial/In-Depth%20CMake%20Library%20Concepts.html)
 
 ----
