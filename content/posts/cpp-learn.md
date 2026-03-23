@@ -267,27 +267,22 @@ int main(){
 ```
 2. Run following commands
   
-```makefile
-Microsoft Windows [Version 10.0.19045.5371]
-(c) Microsoft Corporation. All rights reserved.
-
-C:\Users\phong.nguyen-van\Desktop\datasets\github\Cpp\example1>ls
+```bash
+$ ls
 main.cpp
 
-C:\Users\phong.nguyen-van\Desktop\datasets\github\Cpp\example1>g++ --version
+$ g++ --version
 g++ (MinGW.org GCC-6.3.0-1) 6.3.0
 Copyright (C) 2016 Free Software Foundation, Inc.
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+$ g++ main.cpp -o main.o
 
-C:\Users\phong.nguyen-van\Desktop\datasets\github\Cpp\example1>g++ main.cpp -o main.o
+$ g++ main.o -o main.exe
 
-C:\Users\phong.nguyen-van\Desktop\datasets\github\Cpp\example1>g++ main.o -o main.exe
-
-C:\Users\phong.nguyen-van\Desktop\datasets\github\Cpp\example1>main.exe
+$ main.exe
 Hello world
-
 ```
 
 ## 3. Configuring the compiler
@@ -310,11 +305,11 @@ Hello world
 - For gcc/g++/clang, the `-std=c++17` option is used to set the language standard.
 
 ## 4. C++ Basic
-- `Data`: information
-- `Value`: piece of data
-- `Object`: store a value in memory
-- `Variable`: an object has a name(identifier)
-- `Initialization`:  provides an initial value for a variable.
+- `Data` is information
+- A `Value` is a piece of data
+- An `Object` is a region of memory that stores a value
+- A `Variable` is a named location in memory that stores data.
+- `Initialization` is the act of providing an initial value for a variable.
 
 ### 4.1. Initialization
 ```cpp
@@ -353,7 +348,6 @@ Foo f3 = 3.14; //  ERROR (explicit ctor not allowed here)
 Foo f4(3.14);  //  OK direct init works with explicit → calls Foo(double)
 ```
 
-
 ### 4.2. iostream
 - `std::cin >> x`: console input to x
 - `std::cout << x`: console output
@@ -380,28 +374,31 @@ int main() {
 }
 ```
 
-
-### 4.3. Keywords and identifiers
-- Keywords: alignas alignof and and_eq asm auto bitand bitor bool break case catch char char8_t (since C++20) char16_t char32_t class compl concept (since C++20) const consteval (since C++20) constexpr constinit (since C++20) const_cast continue co_await (since C++20) co_return (since C++20) co_yield (since C++20) decltype default delete do double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable namespace new noexcept not not_eq nullptr operator or or_eq private protected public register reinterpret_cast requires (since C++20) return short signed sizeof static static_assert static_cast struct switch template this thread_local throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor xor_eq
-
 - Identifiers: `snake_case` vs `camelCase`
 > When working in an existing program, use the conventions of that program. Use modern best practices when writing new programs.
 
 ### 4.4. Literals vs Operators
 - `Literals`: fixed values like 42, 3.14, 'A', "Hello", true, nullptr.
-- `Operators`:   symbols that act on values (+ - * / %, == != < >, && || !, = += -=, etc.).
+- `Operators`: symbols that act on values (+ - * / %, == != < >, && || !, = += -=, etc.).
 
 ### 4.5. Expression
-- An expression is anything that produces a value when compilling.
-> Khai báo: tên biến chỉ là identifier (chưa phải expression).
-Sử dụng: tên biến trở thành một expression
-
+- An **expression** `is a combination of` operators, constants and variables that evaluate to a value.
+- There are `several types of expressions`, including:
+  - constant expr: `5, 10+3`
+  - integral expr: `x*y`
+  - floating expr: `x + 10.75`
+  - relational expr: `x <=y`
+  - logical expr: `x > y && z == 6`
+  - pointer expr: `&x`
+  - bitwise: `x<<3`
 ```cpp
 5 + 3        // expression → evaluates to 8
 x * y - 2    // expression → depends on x, y
 func(10)     // function call expression
 true && flag // logical expression
 ```
+
+---
 
 ## 5. C++ Basic: Functions and Files
 ### 5.1. Function
@@ -1296,7 +1293,7 @@ int main()
 }
 ```
 
-## 12. Control Flow
+## 12. Control Flows
 ![image](/images/learncpp_2.png)
 ### 12.1. Constexpr if statement
 - C++17, that requires the conditional to be a constant expression. It means the condition will be evaluated at runtime.
@@ -2228,6 +2225,27 @@ template <typename T>
 using Coord = Pair<T>; // Coord is an alias for Pair<T>
 ```
 ## 19. Classes
+- A **class** is a `user-defined blueprint` used to create objects. It defines the `properties and behaviors` that `all objects of that type` share.
+- An **object** is an `instance of a class`. It represents `a real entity` and contains `actual values` for the class’s attributes.
+- An **instance** is a `specific object` created from a class. (In practice, “object” and “instance” are often used interchangeably.)
+
+- **Four Pillars of OOP in C++**:
+  - **Abstraction** is the `process of hiding the implementation details` and only `showing the essential details or features` to the user. It `allows to focus on` what an object `does` rather than `how it does` it.
+    It is achieved using `abstract classes` (classes that have at least one pure virtual function).
+
+  - **Encapsulation** is the `process of bundling data and methods into a single unit` (class) and `restricting direct access` to some components.
+    Data is hidden and accessed through public methods.
+    It is achieved using access specifiers like `private, protected, and public`.
+
+  - **Inheritance**  is `a mechanism` where a derived class acquires the properties and behaviors of a base class, forming an `is-a` relationship.
+    It improves code reuse and extensibility.
+    It is implemented using `:` followed by an access specifier `public, private, protected`.
+
+  - **Polymorphism** means `many forms`. It allows the `same interface (function or method)` to `behave differently` depending on the context.
+    It is achieved through:
+        - `Compile-time polymorphism`: `function overloading, operator overloading`
+        - `Runtime polymorphism`: `virtual functions`
+
 - **Overview:**
 ```cpp
 // ===== File: main.cpp =====
@@ -3634,7 +3652,9 @@ int main()
 - Avoid multiple inheritance unless alternatives lead to more complexity.
 
 ## 21. Virtual Functions - Polymorphism
->C++ allows you to set base class pointers and references to a derived object. This is useful when we want to write a function or array that can work with any type of object derived from a base class.
+- A virtual function that resolves to `the most-derived version of the function` that exists `between the base and derived class`.
+
+> C++ allows you to set base class pointers and references to a derived object. This is useful when we want to write a function or array that can work with any type of object derived from a base class.
 Without virtual functions, base class pointers and references to a derived class will only have access to base class member variables and versions of functions.
 A virtual function is a special type of function that resolves to the most-derived version of the function (called an override) that exists between the base and derived class. To be considered an override, the derived class function must have the same signature and return type as the virtual base class function. The one exception is for covariant return types, which allow an override to return a pointer or reference to a derived class if the base class function returns a pointer or reference to the base class.
 A function that is intended to be an override should use the override specifier to ensure that it is actually an override.
