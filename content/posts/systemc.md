@@ -320,6 +320,9 @@ execution phase ends @ 10 s
           a) all processes have yielded
           b) a process has executed sc_stop()
           c) maximum time is reached
+          Evaluation phase
+          Update phase
+          Delta notification phase
 
 - There are four callback functions are called by the kernel during these stages:
   - `virtual void before_end_of_elaboration()`: is called `after the construction` of the module hierarchy.
@@ -453,3 +456,574 @@ execution phase ends @ 11 s
   - `void notify()`: to create an immediate notification.
   - `void notify(sc_time)/(double,sc_time_unit)`: to create a `timed notification`
   - `cancel()`: delete any pending notifications for this event
+  
+- e.g.
+```cpp
+#include <systemc>
+
+using namespace sc_core;
+
+class EventModule : public sc_module {
+ public:
+  SC_CTOR(EventModule) {
+    SC_THREAD(thread_trigger);
+    SC_THREAD(thread_catcher);
+  }
+
+ private:
+  sc_event e_;
+
+  void thread_trigger() {
+    while (true) {
+      std::cout << "Event notified at " << sc_time_stamp() << '\n';
+      e_.notify(1, SC_SEC);
+      if (sc_time_stamp() == sc_time(4, SC_SEC)) {
+        std::cout << "\t\tEvent canceled at " << sc_time_stamp() << '\n';
+        e_.cancel();
+      }
+      wait(2, SC_SEC);
+    }
+  }
+
+  void thread_catcher() {
+    while (true) {
+      wait(e_);
+      std::cout << "\tEvent caught at " << sc_time_stamp() << '\n';
+    }
+  }
+};
+
+int sc_main(int, char*[]) {
+
+  EventModule m_module("m");
+
+  sc_start(10, SC_SEC);
+
+  return 0;
+}
+
+
+//         SystemC 2.3.3-Accellera --- Mar 23 2026 15:03:48
+//         Copyright (c) 1996-2018 by all Contributors,
+//         ALL RIGHTS RESERVED
+// Event notified at 0 s
+//         Event caught at 1 s
+// Event notified at 2 s
+//         Event caught at 3 s
+// Event notified at 4 s
+//                 Event canceled at 4 s
+// Event notified at 6 s
+//         Event caught at 7 s
+// Event notified at 8 s
+//         Event caught at 9 s
+```
+
+- The are several forms of `wait()` are supported, following:
+
+1.` wait()`: wait on events in sensitivity list (SystemC 1.0).
+1. `wait(e1)`: wait on event e1.
+2. `wait(e1 | e2 | e3)`: wait on events e1, e2, or e3.
+3. `wait(e1 & e2 & e3)`: wait on events e1, e2, and e3.
+4. `wait(200, SC_NS)`: wait for 200 ns.
+5. `wait(200, SC_NS, e1)`: wait on event e1, timeout after 200 ns.
+6. `wait(200, SC_NS, e1 | e2 | e3)`: wait on events e1, e2, or e3, timeout after 200 ns.
+7. `wait(200, SC_NS, e1 & e2 & e3)`: wait on events e1, e2, and e3, timeout after 200 ns.
+8. `wait(sc_time(200, SC_NS))`: wait for 200 ns.
+9.  `wait(sc_time(200, SC_NS), e1)`: wait on event e1, timeout after 200 ns.
+10. `wait(sc_time(200, SC_NS), e1 | e2 | e3)`: wait on events e1, e2, or e3, timeout after 200 ns.
+12. `wait(sc_time(200, SC_NS), e1 & e2 & e3 )`: wait on events e1, e2, and e3, timeout after 200 ns.
+13. `wait(200)`: wait for 200 clock cycles, SC_CTHREAD only (SystemC 1.0)
+14. `wait(0, SC_NS)`: wait one delta cycle.
+15. `wait(SC_ZERO_TIME)`: wait one delta cycle.
+
+### 4.7. Delta Cycle
+- A delta cycle is a very small step of time within the simulation. SystemC keeps running delta cycles until no more events are pending.
+- Multi delta cycles maybe occur at a particular simulated time.
+- When a signal assignment occurs, other process do not see the update until the next delta cycle.
+- The delta cycle is used when:
+  - `notify(SC_ZERO_TIME)`: a.k.a delta notification, event to be notified `in the evaluate phase of the next delta cycle`
+  - `request_update()`, `update()`: to be called `in the update phase of the current delta cycle`
+
+### 4.8. Sensitivity
+- The **sensitivity of a process instance** is the set of `events and time-outs` that can potentially cause `the process to be resumed or triggered`.
+- A process instance is sensitive to an event if the event has been added to the `static/dynamic sensitivity` of the process instance.
+- The time-out occurs when a given interval time has elapsed.
+- There are two types of sensitivities:
+  - `Static`: is fixed during elaboration. (`sensitive << event << event;` & `wait()`)
+  - `Dynamic`: under control of the process itself. (`wait(event | event)` & `next_trigger()`)
+- It applies to the most recently declared process
+### 4.9. Initialization
+- It is a part of the execution stage, which happens after `sc_start()`
+- `dont_initialize()` prevents a process from running at time 0 (initialization phase).
+- TBD https://learnsystemc.com/basic/initialization
+
+### 4.10. Process Method - SC_METHOD
+- Method may have static/dynamic sensitivity (`next_trigger`)
+- e.g.
+```cpp
+#include <systemc>
+using namespace sc_core;
+
+SC_MODULE(PROCESS) {
+  SC_CTOR(PROCESS) { // constructor
+    SC_METHOD(method); // register a method process
+  }
+
+  void method() {
+    // notice there's no while loop here
+    int idx = 0; // re-declare every time method is triggered
+    std::cout << "method" << idx++ << " @ " << sc_time_stamp() << std::endl;
+    next_trigger(1, SC_SEC);
+  }
+};
+
+int sc_main(int, char*[]) {
+  PROCESS process("process");
+  sc_start(4, SC_SEC);
+  return 0;
+}
+```
+
+### 4.11. Event Queue - sc_event_queue
+- A queue that can contain any number of pending notifications.
+- TBD https://learnsystemc.com/basic/event_queue
+https://learnsystemc.com/basic/event_queue_combined
+
+### 4.12. Mutex
+- SystemC Mutex is a predefined channel intended to model the behavior of a mutual exclusion lock used to control access to a resource shared by concurrent processes.
+- Member functions:
+  - `int lock()`:  shall suspend until the mutex is unlocked
+  - `int trylock()`: -1 if is already locked.
+  - `int unlock()`: return the value –1. The mutex shall remain unlocked.
+
+```cpp
+#include <systemc>
+using namespace sc_core;
+
+SC_MODULE(MutexModule) {
+  sc_mutex mutex_;  // create a mutex
+
+  SC_CTOR(MutexModule) {
+    SC_THREAD(thread_1);
+    SC_THREAD(thread_2);
+  }
+
+  void thread_1() {
+    while (true) {
+      // try to lock or wait
+      if (mutex_.trylock() == -1) {
+        std::cout << sc_time_stamp()
+                  << ": thread_1 suspend until the mutex is unlocked\n";
+        mutex_.lock();
+        std::cout << sc_time_stamp()
+                  << ": thread_1 obtained resource by lock()\n";
+      } else {
+        std::cout << sc_time_stamp()
+                  << ": thread_1 obtained resource by trylock()\n";
+      }
+
+      wait(1, SC_SEC);
+
+      // unlock
+      mutex_.unlock();
+      std::cout << sc_time_stamp()
+                << ": thread_1 released resource by unlock()\n";
+
+      wait(SC_ZERO_TIME);
+    }
+  }
+
+  void thread_2() {
+    while (true) {
+      // try to lock or wait
+      if (mutex_.trylock() == -1) {
+        std::cout << sc_time_stamp()
+                  << ": thread_2  suspend until the mutex is unlocked\n";
+        mutex_.lock();
+        std::cout << sc_time_stamp()
+                  << ": thread_2 obtained resource by lock()\n";
+      } else {
+        std::cout << sc_time_stamp()
+                  << ": thread_2 obtained resource by trylock()\n";
+      }
+
+      wait(1, SC_SEC);
+
+      // unlock
+      mutex_.unlock();
+      std::cout << sc_time_stamp()
+                << ": thread_2 released resource by unlock()\n";
+
+      wait(SC_ZERO_TIME);
+    }
+  }
+};
+
+int sc_main(int, char*[]) {
+  MutexModule module("mutex");
+  sc_start(4, SC_SEC);
+  return 0;
+}
+```
+
+### 4.13. Semaphore
+https://learnsystemc.com/basic/channel_semaphore
+
+### 4.14. FIFO - sc_fifo
+- FIFO is used to model the behavior of a fifo.
+- The number of slots is fixed when the object is constructed.
+- It implements the `sc_fifo_in_if<T>` or `sc_fifo_out_if<T>` interfaces.
+https://learnsystemc.com/basic/channel_fifo
+
+### 4.15. Signal <sc_signal>
+- **Signal** is a predefined primitive channel intended to model the behavior of a single piece of wire carrying a digital electronic signal, which can only be written by one process at each delta cycle.
+- It implements the `sc_signal_inout_if<T>` interface
+- Features:
+  - is an object of the class `sc_signal`
+  - has only one slot for rw
+  - triggers and update request only if the new value is different from the current value
+  - read won't remove the value
+
+- Constructors:
+  - `sc_signal()`
+  - `sc_signal(const char* name)`
+- Member functions:
+  - `read()`, `operator ()` return a reference to the current value
+  - `write(<v>)`, `operator =`: modifies the value of the signal
+  - `sc_event& default_event()`, `sc_event& value_changed_event()`: return a reference to the value-changed event.
+  - `bool event()`: return true if the value of the signal changed in the update phase of the immediately preceding delta cycle and at the current simulation time.
+
+- **Many writers**: https://learnsystemc.com/basic/signal_many_writer
+
+- **Resolved Signal <sc_signal_resolved, sc_signal_rv>**
+  - A resolved signal may be written by multi process.
+  - The difference between `sc_signal_resolved` and `sc_signal_rv` is the argument to the base class template.
+    - class `sc_signal_resolved`: public sc_signal<sc_dt::sc_logic,SC_MANY_WRITERS>
+    - template <int W> class `sc_signal_rv`: public sc_signal<sc_dt::sc_lv<W>,SC_MANY_WRITERS>
+
+- **sc_signal<bool>** provides additional member functions appropriate for two-valued signals.
+  - `posedge_event()` : returns **reference to an event** that is notified whenever the value of the channel **changes** and the new value of the channel is **true or '1'**.
+  - `negedge_event()` : returns **reference to an event** that is notified whenever the value of the channel **changes** and the new value of the channel is **false or '0'**.
+  - `posedge()`: returns **true** if and only if the **value of the channel changed** in the update phase of the immediately preceding delta cycle and at the current simulation time, and the **new value of the channel is true or '1'**.
+  - `negedge()`: returns **true** if and only if the **value of the channel changed** in the update phase of the immediately preceding delta cycle and at the current simulation time, and the **new value of the channel is false or '0'**.
+
+### 4.16. Buffer - <sc_buffer>
+- `sc_buffer` is a predefined primitive channel derived from `sc_signal`
+- The difference from `signal` is that a value-changed event is notified `whenever the buffer is written` >< when the value of the buffer is changed.
+
+### 4.17. Communication
+#### 4.17.1. Port
+- A **Interface** is an abstract class derived from `sc_interface` but not `sc_object`, which contains a set of pure virtual functions that shall be defined in one more channels derived from that interface.
+- A **Channel** is a non-abstract class derived from one or more interfaces. A channel may be a primitive channel or a hierarchical channel. If not, it is strongly recommended that a channel be derived from the class `sc_object`.
+    - `sc_prim_channel` is the base class for all primitive channels.
+    - channel may provide public member functions that can be called using the interface method call paradigm.
+    - a primitive channel shall implement one or more interfaces.
+- A **Port** an interface of a module used to communicate with the outside world. It is either a class derived from the class `sc_port` or an object of the class `sc_port`(*basically, it is a pointer to channel*). It requires **services**, **interface defines services**, **channel implements services**.
+    - provides the means by which a module can be written such that it is independent of the context in which it is instantiated.
+    - forwards interface method calls to the channel to which the port is bound.
+    - defines a set of services (as identified by the type of the port) that are required by the module containing the port.
+
+- When to use port:
+  1. If a module is to call a member function belonging to a channel that is outside the module itself, that call should be made using an interface method **call through a port of the module**.
+  2. However, a call to a member function belonging to a channel instantiated within the current module may be made directly. This is known as **portless** channel access.
+  3. If a module is to call a member function belonging to a channel instance within a child module, that call should be made through an **export of the child module.**
+   
+- e.g.
+```cpp
+#include <systemc>
+
+using namespace sc_core;
+
+class ModuleA : public sc_module {
+ public:
+  SC_CTOR(ModuleA) {
+    // write thread (runs continuously and drives values to the channel)
+    SC_THREAD(outsideWrite);
+  }
+
+  // binds (connect) port to channel (signal)
+  // this connects the module's output port to an external sc_signal
+  void bind(sc_signal<int>& s) { port_(s); }
+
+ private:
+  // a port used to write to an outside channel
+  // sc_port is an interface handle, not storage
+  sc_port<sc_signal_out_if<int>> port_;
+
+  void outsideWrite() {
+    int val = 1;
+    while (true) {
+      // write to an outside channel
+      // calls the write() method of the bound channel via the interface
+      // port_ behaves like a pointer to the channel interface
+      port_->write(val++);
+      wait(1, SC_SEC);
+    }
+  }
+};
+
+class ModuleB : public sc_module {
+ public:
+  SC_CTOR(ModuleB) {
+    // read thread (reacts to value changes on the bound channel)
+    SC_THREAD(outsideRead);
+
+    // static sensitivity: applies to THIS SC_THREAD only
+    // triggers when the value in the connected channel changes
+    sensitive << port_;
+
+    // prevent execution at time 0, only run when an event occurs
+    dont_initialize();
+  }
+
+  // binds (connect) port to channel (signal)
+  // connects input port to external sc_signal
+  void bind(sc_signal<int>& s) { port_(s); }
+
+ private:
+  // a port used to read from an outside channel
+  // uses input interface of sc_signal
+  sc_port<sc_signal_in_if<int>> port_;
+
+  void outsideRead() {
+    while (true) {
+      // use port to read from the channel
+      // read() fetches the current value stored in the signal
+      std::cout << sc_time_stamp()
+                << ": reads from outside channel, val=" << port_->read()
+                << std::endl;
+
+      // wait for next value-change event (as defined by sensitivity)
+      wait();
+    }
+  }
+};
+
+int sc_main(int, char*[]) {
+
+  ModuleA ma("MA");
+  ModuleB mb("MB");
+  
+  // declares a signal (channel) outside modules to connect them
+  // this signal stores data and propagates events between modules
+  sc_signal<int> signal;
+
+  // bind ports to the same channel -> enables communication
+  ma.bind(signal);
+  mb.bind(signal);
+
+  sc_start(10, SC_SEC);
+  return 0;
+}
+
+
+//         SystemC 2.3.3-Accellera --- Mar 23 2026 15:03:48
+//         Copyright (c) 1996-2018 by all Contributors,
+//         ALL RIGHTS RESERVED
+// 0 s: reads from outside channel, val=1
+// 1 s: reads from outside channel, val=2
+```
+
+#### 4.17.2. Export
+- An **Export** is `sc_export` class.
+  - allows a module to provide an interface to its parent module
+  - forwards interface method to the channel to which the export is bound
+  - defines a set of services that are provided by the module containing the export
+- When to use export:
+  1. Providing an interface through an export is an alternative to a module simply implementing the interface.
+  2. The use of an explicit export allows a single module instance to provide multiple interfaces in a structured manner.
+  3. If a module is to call a member function belonging to a channel instance within a child module, that call should be made through an export of the child module.
+
+- e.g.
+```cpp
+class ModuleA : public sc_module {
+ public:
+  // an export for other module to connect
+  sc_export<sc_signal<int>> port_;
+
+  SC_CTOR(ModuleA) {
+    port_(signal_);  // bind an export to an internal channel
+    SC_THREAD(outsideWrite);
+  }
+
+ private:
+  sc_signal<int> signal_;
+
+  void outsideWrite() {
+    int val = 1;
+    while (true) {
+      signal_.write(val++);  // write to an channel
+      wait(1, SC_SEC);
+    }
+  }
+};
+
+class ModuleB : public sc_module {
+ public:
+  // a port used to read from an export of another module
+  sc_port<sc_signal_in_if<int>> port_;
+
+  SC_CTOR(ModuleB) {
+    SC_THREAD(outsideRead);
+    sensitive << port_;
+    dont_initialize();
+  }
+
+ private:
+  void outsideRead() {
+    while (true) {
+      std::cout << sc_time_stamp()
+                << ": reads from outside channel, val=" << port_->read()
+                << std::endl;
+      wait();
+    }
+  }
+};
+
+int sc_main(int, char*[]) {
+  Export::ModuleA ma("MA");
+  Export::ModuleB mb("MB");
+
+  // connect ModuleA's port to ModuleB's export (interface forwarding)
+  mb.port_(ma.port_);
+
+  sc_start(10, SC_SEC);
+  return 0;
+}
+
+//         SystemC 2.3.3-Accellera --- Mar 23 2026 15:03:48
+//         Copyright (c) 1996-2018 by all Contributors,
+//         ALL RIGHTS RESERVED
+// 0 s: reads from outside channel, val=1
+// 1 s: reads from outside channel, val=2
+// 2 s: reads from outside channel, val=3
+// 3 s: reads from outside channel, val=4
+// 4 s: reads from outside channel, val=5
+// 5 s: reads from outside channel, val=6
+// 6 s: reads from outside channel, val=7
+// 7 s: reads from outside channel, val=8
+// 8 s: reads from outside channel, val=9
+// 9 s: reads from outside channel, val=10
+```
+
+#### 4.17.3. Port to Port
+- So far we covered the cases of:
+    - **connecting two processes of same module via channel:**
+      `process1() --> channel --> process2() `
+    - **connecting two processes of different modules via port and channel:**
+      `module1::process1() --> module1::port1 --> channel --> module2::port2 --> module2::process2()`
+    - **connecting two processes of different modules via export:**
+      `module1::process1() --> module1::channel --> module1::export1 --> module2::port2 --> module2::process2()`
+  
+- Now we have these cases like `module::port1 --> module::submodule::port2`
+
+#### 4.17.4. Specialized Ports
+https://learnsystemc.com/basic/specialized_port
+
+#### 4.17.5. Port Array
+https://learnsystemc.com/basic/port_array
+
+### 4.18. Primitive Channel
+https://learnsystemc.com/basic/primitive_channel
+
+### 4.19. Hierarchical Channel
+https://learnsystemc.com/basic/hierarchical_channel
+
+### 4.20. Clock
+- **Clock** `sc_clock` is a predefined primitive channel to model the behavior of **a digital clock signal**
+- `sc_signal_in_if<bool>` to access the value and events of the clock
+
+>Constructor:
+sc_clock(
+  constchar*name_, // unique module name
+  double period_v_, // the time interval between two consecutive transitions from false to true, also equal to the time interval between two consecutive transitions from true to false. Greater than zero, default is 1 nanosecond.
+  sc_time_unit period_tu_, // time unit, used for period
+  double duty_cycle_, // the proportion of the period during which the clock has the value true. Between 0.0 and 1.0, exclusive. Default is 0.5.
+  double start_time_v_, // the absolute time of the first transition of the value of the clock (false to true or true to false). Default is zero.
+  sc_time_unit start_time_tu_,
+  bool posedge_first_ = true ); // if true, the clock is initialized to false, and changes to true at the start time. Vice versa. Default is true.
+- e.g.
+```cpp
+#include <systemc>
+
+using namespace sc_core;
+
+class ClockModule : public sc_module {
+ public:
+  sc_port<sc_signal_in_if<bool>> clk_;
+
+  SC_CTOR(ClockModule) {
+    SC_THREAD(thread);
+    sensitive << clk_;
+    dont_initialize();
+  }
+
+  void thread() {
+    while (true) {
+      // print current clock value
+      std::cout << sc_time_stamp() << ", value = " << clk_->read() << std::endl;
+      // wait for next clock value change
+      wait();
+    }
+  }
+};
+
+int sc_main(int, char*[]){
+  sc_clock clk("clk", 10, SC_SEC, 0.2, 10, SC_SEC, false);  // 10: 10s period
+      // 0.2: 2s true, 8s false
+      // 10: start at 10s
+      // false: start at false
+
+  ClockModule m_clock("mclock");
+  // bind port
+  m_clock.clk_(clk);
+
+  sc_start(31, SC_SEC);
+  return 0;
+}
+```
+### 4.21. Customized Data Type
+https://learnsystemc.com/basic/customized_datatype
+
+
+## 5. Trace File & Error/Message Report
+- A **trace file** records a time-ordered sequence of value changes during simulation.
+  -  uses VCD (Value change dump) file format.
+  -  can only be created and opened by `sc_create_vcd_trace_file`.
+  -  may be opened during elaboration or at any time during simulation.
+  -  contains values that can only be traced by `sc_trace`.
+  -  shall be opened before values can be traced to that file, and values shall not be traced to a given trace file if one or more delta cycles have elapsed since opening the file.
+  -  shall be closed by `sc_close_vcd_trace_file`. A trace file shall not be closed before the final delta cycle of simulation.
+- e.g.
+```cpp
+// Learn with Examples, 2020, MIT license
+#include <systemc>
+using namespace sc_core;
+
+SC_MODULE(MODULE) { // a module write to a channel
+  sc_port<sc_signal<int>> p; // a port
+  SC_CTOR(MODULE) {
+    SC_THREAD(writer); // a writer process
+  }
+  void writer() {
+    int v = 1;
+    while (true) {
+      p->write(v++); // write to channel via port
+      wait(1, SC_SEC); // write every 1 s
+    }
+  }
+};
+int sc_main(int, char*[]) {
+  MODULE module("module"); // instantiate module
+  sc_signal<int> s; // declares signal channel
+  module.p(s); // bind port to channel
+
+  sc_trace_file* file = sc_create_vcd_trace_file("trace"); // open trace file
+  sc_trace(file, s, "signal"); // trace "s" under the name of "signal"
+  sc_start(5, SC_SEC); // run simulation for 5 s
+  sc_close_vcd_trace_file(file); // close trace file
+  return 0;
+}
+```
+
+https://learnsystemc.com/basic/report
