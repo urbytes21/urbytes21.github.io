@@ -219,8 +219,8 @@ Print out: my_module_e x=99 y=100
 ### 4.2. Simulation Process
 - A simulation process is a member function of the `sc_module` that has no in/return, and `is registered with the simulation kernel`.
 - There are three ways to register a simulation process, following:
-  - `SC_METHOD(func)`: none
-  - `SC_THREAD(func)`: has its own thread of execution, may consume simulated time, can be suspended/ `wait()`
+  - `SC_METHOD(func)`: A module method with a sensitivity list that does execute and returns control back to the simulation kernel, No infinite loops allowed
+  - `SC_THREAD(func)`: has its own thread of execution, normally have infinite loops, can be suspended/ `wait()`, 
   - `SC_CTHREAD(func)`: that similar to the `SC_THREAD` but only have a static sensitivity of a clock edge event ?
 - We can register the simulation with the simulation kernel in:
   - `constructor`
@@ -712,16 +712,80 @@ https://learnsystemc.com/basic/channel_fifo
 - The difference from `signal` is that a value-changed event is notified `whenever the buffer is written` >< when the value of the buffer is changed.
 
 ### 4.17. Communication
+![image](/images/sysc_communicate.png)
+
 #### 4.17.1. Port
 - A **Interface** is an abstract class derived from `sc_interface` but not `sc_object`, which contains a set of pure virtual functions that shall be defined in one more channels derived from that interface.
+  - Interfaces are means of communication between ports and channels
+  - A port is bound to the channel through an interface
+  - e.g.
+  - ![image](/images/sysc_interface.png)
+    ```cpp
+    // Declaration of Interfaces
+    #pragma once
+    #include <systemc>
+    using namespace sc_core;
+    
+    class write_if : public sc_interface {
+     public:
+      virtual void write(char) = 0;
+      virtual void reset() = 0;
+    };
+    
+    class read_if : public sc_interface {
+     public:
+      virtual void read(char&) = 0;
+      virtual int num_available() const = 0;
+    };
+    ```
+
+----
+
 - A **Channel** is a non-abstract class derived from one or more interfaces. A channel may be a primitive channel or a hierarchical channel. If not, it is strongly recommended that a channel be derived from the class `sc_object`.
     - `sc_prim_channel` is the base class for all primitive channels.
     - channel may provide public member functions that can be called using the interface method call paradigm.
     - a primitive channel shall implement one or more interfaces.
+    - **separate communication from functionality**:
+      - **Channels are containers for communication protocols and synchronization events**
+      - **Channels implement one/more Interface(s) or Ports**
+  - e.g.
+    ```cpp
+    // declaration of FIFO channels
+    #pragma once
+    #include <systemc>
+    #include "Interface.h"
+    
+    using namespace sc_core;
+    
+    class fifo : public sc_channel, public write_if, public read_if {
+     public:
+      fifo(sc_module_name name);
+      void write(char c) override;
+      void read(char& c) override;
+      void reset() override;
+      int num_available() const override;
+    
+     private:
+      enum e { max_elements = 10 };
+      char data[max_elements];
+      int num_elements;
+      int first;  // index of the oldest element (read position)
+      sc_event write_event;
+      sc_event read_event;
+    
+      bool fifo_empty();
+      bool fifo_full();
+    };
+    ```
+
+----
+
 - A **Port** an interface of a module used to communicate with the outside world. It is either a class derived from the class `sc_port` or an object of the class `sc_port`(*basically, it is a pointer to channel*). It requires **services**, **interface defines services**, **channel implements services**.
     - provides the means by which a module can be written such that it is independent of the context in which it is instantiated.
     - forwards interface method calls to the channel to which the port is bound.
     - defines a set of services (as identified by the type of the port) that are required by the module containing the port.
+    -  **allow a Modules to connect to Channels through an Interface**
+    -   **are bound to the interfaces of channels**
 
 - When to use port:
   1. If a module is to call a member function belonging to a channel that is outside the module itself, that call should be made using an interface method **call through a port of the module**.
