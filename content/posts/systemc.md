@@ -374,8 +374,6 @@ sc_ufixed<8,4> b = 2.5;
 
 - A `channel` implements an `interface`
 - A `module` calls `interface methods` via a `port`
-
-  - ![image](/images/sysc_interface.png)
   - e.g.
     ```cpp
     // Declaration of Interfaces
