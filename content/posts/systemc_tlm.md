@@ -11,6 +11,7 @@ ShowToc: true    # Determines whether to display the Table of Contents (TOC) for
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
 weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
+
 Transaction-Level Modeling 2.0 (TLM-2.0) is a modeling methodology defined in IEEE 1666-2023.
 Instead of communicating through individual signals at every clock cycle, modules exchange complete **transactions** (read/write requests) using C++ function calls.
 This raises the abstraction level, dramatically increasing simulation speed and enabling early software development before RTL is available.
@@ -243,13 +244,52 @@ annotation and temporal decoupling
 
 ----
 
-- **Non-blocking transport interface**
-  - Each transaction has multiple timing points.
-  - Uses **all paths**.
-  - A transaction is finished through multiple calls or a single call.
+## 7. Non-blocking Transport Interface
+- A transaction is break downed into multiple `phrases transition`.
+- Each phrases transition is associated with a `timing point`
+- Each `call/return` from the `non-blocking transport method` may `correspond to` a `phrase transition`
+- By restricting the number of timing points to two, it is possible to use the nb transport interface with the LT code style (not recommend)
+-  It uses **all paths**, and interfaces `tlm_fw_nonblocking_transport_if` vs `tlm_bw_nonblocking_transport_if`
+> **Cơ chế truyền tham số của non-blocking transport interface tương tự blocking transport interface ở chỗ:
+truyền tham chiếu không const (non-const reference) tới transaction object truyền timing annotation
+Điểm khác biệt là: non-blocking transport method còn truyền thêm một phase để biểu thị trạng thái của transaction
+và trả về một giá trị enum để cho biết việc return từ function có đồng thời là một lần chuyển phase hay không**
 
-----
+### 7.1. Paths `nb_transport_fw` and `nb_transport_bw` 
 
+-  `nb_transport` methods shall not call `wait`
+-  several successive calls to `nb_transport_fw` from the same process could each initiate separate transactions without having to wait for the first transaction to complete
+-  the `final timing point of a transaction` may be marked by a call to or a `return` from S`nb_transport` on either the forward path or the backward path.
+
+### 7.1. Transaction Argument
+- 1 transaction = 1 object (while it is active)
+- That object moves back and forth between modules
+- Everyone touches the same object, not copies
+=> don't overwrite data too early or reuse object before transaction finishes
+
+### 7.2. Phrase Argument
+- phase = control signal for "who can touch the transaction and when", including:
+    - **BEGIN_REQ**: initiator controls
+    - **END_REQ**: target takes over
+    - **BEGIN_RESP**: target controls
+    - **END_RESP**: initiator finishes
+
+
+### 7.3. <tlm_sync_enum> Return Value
+- **TLM_ACCEPTED**:
+  -  The callee must not modify the transaction object, phase, or time argument.
+  -  Indicates that the return path is not used.
+  -  The caller typically needs to wait/yield for a future response.
+- **TLM_UPDATED**: 
+  - Indicates that the return path is used.
+  - The protocol state has advanced (phase transition occurred).
+  - The caller must inspect updated arguments and react accordingly.
+- **TLM_COMPLETED**:The callee has completed the transaction (at this socket).
+  - The transaction object and time may be modified.
+  - The phase is undefined and should be ignored.
+  - No further nb_transport calls are allowed for this transaction on this socket.
+  - Completion does not guarantee success, need to check response status.
+---
 ## 1.8 Examples
 ## 1.8.1 Connection
 - **Module and socket:**
@@ -427,206 +467,3 @@ class InitiatorModule : public sc_module, public tlm::tlm_bw_transport_if<> {
 
 
 ---
-
-
-## Creating Bus Master/Slave IP
-
-### Master (Initiator) IP
-
-```cpp
-SC_MODULE(MyMaster) {
-    tlm::tlm_initiator_socket<> master_socket;
-
-    void do_transfer() {
-        tlm::tlm_generic_payload trans;
-        sc_core::sc_time delay = sc_core::SC_ZERO_TIME;
-        unsigned char data[4];
-
-        trans.set_command(tlm::TLM_WRITE_COMMAND);
-        trans.set_address(0x1000);
-        trans.set_data_ptr(data);
-        trans.set_data_length(4);
-        trans.set_response_status(tlm::TLM_INCOMPLETE_RESPONSE);
-
-        master_socket->b_transport(trans, delay);  // LT: blocking call
-    }
-
-    SC_CTOR(MyMaster) {
-        SC_THREAD(do_transfer);
-    }
-};
-```
-
-### Slave (Target) IP
-
-```cpp
-SC_MODULE(MyTarget)
-  : public tlm::tlm_fw_transport_if<>
-{
-    tlm::tlm_target_socket<> slave_socket;
-    unsigned char mem[4096];
-
-    void b_transport(tlm::tlm_generic_payload& trans,
-                     sc_core::sc_time& delay) override {
-        sc_dt::uint64 addr = trans.get_address();
-        unsigned char* ptr  = trans.get_data_ptr();
-        unsigned int   len  = trans.get_data_length();
-
-        if (trans.get_command() == tlm::TLM_WRITE_COMMAND)
-            memcpy(mem + addr, ptr, len);
-        else
-            memcpy(ptr, mem + addr, len);
-
-        trans.set_response_status(tlm::TLM_OK_RESPONSE);
-        delay += sc_core::sc_time(10, sc_core::SC_NS);
-    }
-
-    SC_CTOR(MyTarget) {
-        slave_socket.bind(*this);
-    }
-    // Other required interface methods omitted for brevity
-};
-```
-
----
-
-## Example: SystemC Producer–Consumer with Event
-
-The following example demonstrates `sc_module`, `SC_THREAD`, `sc_signal`, `sc_event`, and port binding in a single self-contained program.
-
-```cpp
-#include <systemc.h>
-
-SC_MODULE(Producer) {
-    sc_out<int>  data_out;
-    sc_out<bool> valid_out;
-    sc_event     request_event;   // external code can notify this
-
-    void produce() {
-        int val = 0;
-        while (true) {
-            wait(10, SC_NS);           // advance time
-            data_out.write(val++);
-            valid_out.write(true);
-            wait(SC_ZERO_TIME);        // delta cycle for the write to propagate
-            valid_out.write(false);
-        }
-    }
-
-    SC_CTOR(Producer) {
-        SC_THREAD(produce);
-    }
-};
-
-SC_MODULE(Consumer) {
-    sc_in<int>  data_in;
-    sc_in<bool> valid_in;
-
-    void consume() {
-        while (true) {
-            wait(valid_in.posedge_event());   // wait for valid rising edge
-            int v = data_in.read();
-            std::cout << "@" << sc_time_stamp()
-                      << " Received: " << v << "\n";
-        }
-    }
-
-    SC_CTOR(Consumer) {
-        SC_THREAD(consume);
-    }
-};
-
-int sc_main(int, char*[]) {
-    sc_signal<int>  data;
-    sc_signal<bool> valid;
-
-    Producer P("producer");
-    Consumer C("consumer");
-
-    // Named port binding
-    P.data_out(data);
-    P.valid_out(valid);
-    C.data_in(data);
-    C.valid_in(valid);
-
-    sc_start(100, SC_NS);
-    return 0;
-}
-```
-
----
-
-## Example Exercise: 4-bit Up-Counter
-
-The following implements a 4-bit up-counter with synchronous reset — a typical introductory SystemC design exercise.
-
-```cpp
-#include <systemc.h>
-
-// ── Module Definition ───────────────────────────────────────────────────────
-SC_MODULE(UpCounter4) {
-    sc_in<bool>        clk;
-    sc_in<bool>        rst;    // synchronous active-high reset
-    sc_out<sc_uint<4>> q;      // 4-bit count output
-
-    sc_uint<4> count;
-
-    void do_count() {
-        if (rst.read())
-            count = 0;
-        else
-            count = count + 1;
-        q.write(count);
-    }
-
-    SC_CTOR(UpCounter4) : count(0) {
-        SC_METHOD(do_count);
-        sensitive << clk.pos();   // triggered on rising clock edge
-    }
-};
-
-// ── Testbench ───────────────────────────────────────────────────────────────
-SC_MODULE(Testbench) {
-    sc_out<bool> clk;
-    sc_out<bool> rst;
-    sc_in<sc_uint<4>> q;
-
-    void run() {
-        rst.write(1);
-        clk.write(0);
-        wait(20, SC_NS);
-
-        rst.write(0);
-        for (int i = 0; i < 20; i++) {
-            clk.write(1); wait(5, SC_NS);
-            clk.write(0); wait(5, SC_NS);
-            std::cout << "@" << sc_time_stamp()
-                      << "  count = " << q.read() << "\n";
-        }
-        sc_stop();
-    }
-
-    SC_CTOR(Testbench) {
-        SC_THREAD(run);
-    }
-};
-
-int sc_main(int, char*[]) {
-    sc_signal<bool>        clk_s, rst_s;
-    sc_signal<sc_uint<4>>  q_s;
-
-    UpCounter4 dut("dut");
-    dut.clk(clk_s);
-    dut.rst(rst_s);
-    dut.q(q_s);
-
-    Testbench tb("tb");
-    tb.clk(clk_s);
-    tb.rst(rst_s);
-    tb.q(q_s);
-
-    sc_start();
-    return 0;
-}
-
-```
