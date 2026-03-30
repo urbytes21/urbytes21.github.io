@@ -235,4 +235,17 @@ Paste:
     p
 
 
+------------------------------------------------------------------------
 
+- **Practice 6 ---  Quick way to comment/uncomment lines**
+
+> Put your cursor on the first # character, press CtrlV (or CtrlQ for gVim), and go down until the last commented line and press x, that will delete all the # characters vertically.
+For commenting a block of text is almost the same:
+First, go to the first line you want to comment, press CtrlV. This will put the editor in the VISUAL BLOCK mode.
+Then using the arrow key and select until the last line
+Now press ShiftI, which will put the editor in INSERT mode and then press #. This will add a hash to the first line.
+Then press Esc (give it a second), and it will insert a # character on all other selected lines.
+
+Refer: https://stackoverflow.com/questions/1676632/whats-a-quick-way-to-comment-uncomment-lines-in-vim
+
+------------------------------------------------------------------------
