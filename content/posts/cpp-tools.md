@@ -168,3 +168,108 @@ void print_hello (int count);
 $ cmake -B build && cmake --build build
 $ firefox  ./build/docs/html/index.html
 ```
+
+---
+## 2. GDB
+
+- Useful cmd:
+   - `layout src`: Displays the source window only.
+   - `layout split`: Displays both the source and assembly windows.
+   - `ref` or `ctrl + L` to refresh
+   - `next`: next step
+   - `step` 
+
+```bash
+$ gcc -o main main.c -s # build without debug info & symbol
+$ wc -c main # word count
+
+$ gdb ./main
+lay next # switch to TUI mode
+tui disable # quit TUI mode (or ctrl X + A to switch between mode)
+quit # quit gdb
+
+$ gcc -o main main.c -g # build for debug infos
+$ gdb ./main
+lay next
+layout src
+layout split
+break main
+break <line_num>
+run # run program
+next # step over
+step # step in
+finish # step out
+info locals # local variables
+print <variable> # print expression
+```
+
+---
+## 3. Debug in VSCode 
+- Install `C/C++ Extension Pack`
+- Create a launch configuration for debug in `launch.json`:
+  ```json
+  {
+      "version": "0.2.0",
+      "configurations": [
+          {
+              "name": "(gdb) Launch",
+              "type": "cppdbg",
+              "request": "launch",
+              "program": "${input:programPath}",
+              "args": [],
+              "stopAtEntry": true,
+              "cwd": "${workspaceFolder}",
+              "environment": [],
+              "externalConsole": false,
+              "MIMode": "gdb",
+              "preLaunchTask": "Build Debug Task",
+              "setupCommands": [
+                  {
+                      "description": "Enable pretty-printing for gdb",
+                      "text": "-enable-pretty-printing",
+                      "ignoreFailures": true
+                  },
+                  {
+                      "description": "Set Disassembly Flavor to Intel",
+                      "text": "-gdb-set disassembly-flavor intel",
+                      "ignoreFailures": true
+                  }
+              ]
+          },
+      ],
+      "inputs": [
+          {
+              "id": "programPath",
+              "type": "promptString",
+              "description": "Path to executable",
+              "default": "${workspaceFolder}/build/"
+          }
+      ]
+  }
+  ```
+
+- Create task for the build/re-build in `tasks.json`:
+    ```json
+    {
+    	"version": "2.0.0",
+    	"tasks": [
+    		{
+    			"label": "Build Debug Task",
+    			"type": "shell",
+    			"command": "${workspaceFolder}/make.sh",
+    			"options": {
+    				"cwd": "${workspaceFolder}"
+    			},
+    			"group": {
+    				"kind": "build",
+    				"isDefault": true
+    			},
+    			"problemMatcher": []
+    		}
+    	]
+    }
+    ```
+- Run Debug: `Ctrl + F5`
+    
+---
+## 4. Other
