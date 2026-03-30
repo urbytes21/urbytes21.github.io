@@ -486,6 +486,20 @@ cmake -B build -DEXAMPLE_FOO=Bar -DEXAMPLE_QUX=Baz
      }
     ]
 }
+
+// Template:
+{
+  "version": 4,
+  "configurePresets": [
+    {
+      "name": "example-preset",
+      "cacheVariables": {
+        "EXAMPLE_FOO": "Bar",
+        "EXAMPLE_QUX": "Baz"
+      }
+    }
+  ]
+}
 ```
 then use the preset:
 ```bash
