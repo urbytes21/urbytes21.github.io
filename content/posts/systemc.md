@@ -129,31 +129,96 @@ int sc_main(int argc, char* argv[]){
 
 ![image](/images/sysc_scheduler.png)
 
-+ Step 1: Elaboration
+- The description of the scheduling algorithm uses the following four sets:
+  - `The set of runnable processes`: Processes ready to execute right now, SC_METHOD / SC_THREAD that are triggered, Kernel picks one, runs it until it yields
+  - `The set of update requests`: Deferred channel updates, e.g. `sc_signal.write()`, stored and executed later in update phase
+  - `The set of delta notifications and time-outs`: run at same simulation time, but next delta cycle
+  - `The set of timed notifications and time-outs`: future events (time advances)
+    
++ **Step 1: Elaboration**
   + Creating instances of clocks, design modules, and channels
   + Establishes hierarchy and initializes the data structures
   + Register processes and perform the connections between modules
-+ Step 2: Initialization
++ **Step 2: Initialization**
   + Each process is executed once (SC_METHOD) or until a synchronization point (i.e., a wait) is reached (for SC_THREAD)
-+ Step 3: Evaluation (Delta cycle=c0, time = t0)
++ **Step 3: Evaluation (Delta cycle=c0, time = t0)**
   + Select a process being ready to run and resume for its execution
   + If a process P has been executed in the current phase, it will be triggered again if a controlling event is notified immediately
-+ Step 4: Update (Delta cycle=c0, time = t0)
++ **Step 4: Update (Delta cycle=c0, time = t0)**
   + Execute any pending calls to update() resulting from the calls to request_update() in the evaluation phase
   + The update of channels could generate notification of events
-+ Step 5: Delta-delay processing (Delta cycle=c0+1, time = t0)
++ **Step 5: Delta-delay processing (Delta cycle=c0+1, time = t0)**
   + If there are pending delta-delay notifications, determine which processes are ready to run and go to the evaluation phase (Step 2)
   + Simulation time is not advanced
-+ Step 6: Simulation time advance (Delta cycle=c0, time = t1)
++ **Step 6: Simulation time advance (Delta cycle=c0, time = t1)**
   + Advance the simulation time to the earliest pending timed notification
   + Determine which processes are ready to run due to the events that have pending notifications at the current time
   + If there are no more timed notification, the simulation is finished
 
-#### 4.2.Initialization
+----
+#### Initialization
 - Happens **after** `sc_start()`, perform the following:
   - Run the `update phase` but without continuing to the `delta notification phase`.
   - Each `process` is **executed once**, (to turn off initialization for a particular process, `dont_initialize()` function can be called after the  process declaration inside a module constructor.)
   - Run the delta notification phase
+
+#### Evaluation Phase
+- Using the `runnable processes set`
+    ```bash
+    while (runnable not empty):
+        pick 1 process
+        run it until:
+            - returns (SC_METHOD)
+            - wait() / suspend (SC_THREAD)
+    ```
+- During execution:
+    - **`Immediate notify`**: add sensitive processes to `runnable processes set` (same phase)
+    - **`request_update()`**: add to `update requests set`
+    - **`notify(SC_ZERO_TIME) / wait(SC_ZERO_TIME)`**: add to `delta notifications set`
+    - **`notify(t > 0) / wait(t > 0)`**: add to `timed notifications set`
+
+=> Move to **Update Phase** when `runnable processes set` becomes **empty**
+
+#### Update Phase
+- Using the `update requests set`
+    ```bash
+    for each channel with pending request_update:
+        call update()   // at most once per channel
+    ```
+- Applies deferred updates (e.g., `sc_signal write`)
+
+=> Always move to **Delta Notification Phase**
+
+#### Delta Notification Phase
+- Using the `delta notifications and time-outs set`
+    ```bash
+    for each pending delta notification / timeout:
+        find processes sensitive to the event
+        add them to `runnable processes set`
+    ```
+
+- Clear all processed delta notifications
+
+=> If `runnable processes set` is NOT empty: go back to **Evaluation Phase**  
+=> Else: go to **Timed Notification Phase**
+
+#### Timed Notification Phase
+- Using the `timed notifications and time-outs set`
+    ```bash
+    if set not empty:
+        t = earliest scheduled time
+        advance simulation time to t
+
+        for all notifications/timeouts at time t:
+            find sensitive processes
+            add them to `runnable processes set`
+
+        remove all processed items at time t
+    else:
+        end simulation
+    ```
+
+=> If `runnable processes set` is NOT empty => go to **Evaluation Phase**
 
 --- 
 
