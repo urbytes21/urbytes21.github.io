@@ -152,9 +152,8 @@ int sc_main(int argc, char* argv[]){
 #### 4.2.Initialization
 - Happens **after** `sc_start()`, perform the following:
   - Run the `update phase` but without continuing to the `delta notification phase`.
-  - Each process is executed once, (to turn off initialization for a particular process, `dont_initialize()` function can be called after the  process declaration inside a module constructor.)
+  - Each `process` is **executed once**, (to turn off initialization for a particular process, `dont_initialize()` function can be called after the  process declaration inside a module constructor.)
   - Run the delta notification phase
-
 
 --- 
 
@@ -227,6 +226,135 @@ SC_MODULE(Counter) {
 - must be statically sensitive to exactly `one clock edge`
 - executes once per clock cycle after each, and allows only `wait()` or `wait(int)` to advance clock
 - supports synchronous and asynchronous reset signals
+
+#### 5.3.4. Dynamic Processes `<sc_spawn>`
+
+-  **sc_spawn** is a flexible way to dynamically create and control processes, with arguments + return values.
+```cpp
+template <typename T>
+sc_process_handle sc_spawn(
+    T object ,
+    const char* name_p = 0 ,
+    const sc_spawn_options* opt_p = 0 );
+
+template <typename T>
+sc_process_handle sc_spawn(
+    typename T::result_type* r_p , 
+    T object , 
+    const char* name_p = 0 ,
+    const sc_spawn_options* opt_p = 0 );
+
+#define sc_bind boost::bind
+#define sc_ref(r) boost::ref(r)
+#define sc_cref(r) boost::cref(r)
+```
+- `sc_spawn` function to create a static or dynamic spawned process instance during:
+  - **Elaboration phase**: child of a module (or top-level in `sc_main`)
+  - **Simulation phase**: child of the calling process
+
+- `sc_bind`, `sc_ref`, and `sc_cref` to bind arguments ((by value, reference, or const reference)) to spawned functions.
+- The spawned process can be configured using `sc_spawn_options` (e.g., method/thread type, sensitivity, `dont_initialize`).
+
+- e.g.
+```cpp
+#define SC_INCLUDE_DYNAMIC_PROCESSES
+#include <systemc>
+
+using namespace sc_core;
+
+int function() {
+  LOG_MAIN("function call");
+  return 1;
+}
+
+int function_args(int a, int& b, const int& c) {
+  LOG_MAIN("function call");
+  LOG_MAIN("args: a=" + std::to_string(a) + " b=" + std::to_string(b) +
+           " c=" + std::to_string(c));
+  return a + b + c;
+}
+
+struct Functor {
+  typedef int result_type;
+  result_type operator()() { return function(); };
+};
+
+SC_MODULE(Test) {
+  sc_signal<int> sig;
+  int ret;
+
+  SC_CTOR(Test) {
+    SC_THREAD(thread);
+    // sc_spawn(&::function);
+  }
+
+  void function() {
+    LOG("function call");
+  }
+
+  void thread() {
+    LOG("begin");
+
+    //  spawn a function without arguments and discard any return value.
+    sc_spawn(&::function);
+    wait(1, SC_SEC);
+
+    // spawn a similar process and create a process handle.
+    sc_process_handle handle = sc_spawn(&::function);
+    wait(1, SC_SEC);
+
+    // spawn a function object and catch the return value.
+    Functor fr;
+    sc_spawn(&ret, fr);
+    LOG("Value: " + std::to_string(ret));
+    wait(1, SC_SEC);
+
+    // spawn a method process named "f1", sensitive to sig, not initialized.
+    sc_spawn_options opt;
+    opt.spawn_method();
+    opt.set_sensitivity(&sig);
+    opt.dont_initialize();
+    sc_spawn(::function, "f1", &opt);
+    wait(1, SC_SEC);
+
+    //  spawn a similar process named "f2" and catch the return value.
+    sc_spawn(&ret, fr, "f2", &opt);
+    LOG("Value: " + std::to_string(ret));
+    wait(1, SC_SEC);
+
+    // spawn a member function using Boost bind
+    sc_spawn(sc_bind(&Test::function, this));
+
+    // spawn a member function using Boost bind, pass arguments and catch the return value.
+    int A = 0;
+    int B = 2;
+    int C = 3;
+    sc_spawn(&ret, sc_bind(&::function_args, A, sc_ref(B), sc_cref(C)));
+    LOG("Value: " + std::to_string(ret));
+    wait(1, SC_SEC);
+    LOG("end");
+  }
+};
+
+int sc_main(int, char*[]) {
+  Test test("m");
+
+  sc_start();
+  return 0;
+}
+
+// @ 0 s delta=0 [m] [thread] begin
+// @ 0 s delta=0 [main] [function] function call
+// @ 1 s delta=1 [main] [function] function call
+// @ 2 s delta=2 [m] [thread] Value: 1
+// @ 2 s delta=2 [main] [function] function call
+// @ 4 s delta=4 [m] [thread] Value: 1
+// @ 5 s delta=5 [m] [thread] Value: 1
+// @ 5 s delta=5 [m] [function] function call
+// @ 5 s delta=5 [main] [function_args] function call
+// @ 5 s delta=5 [main] [function_args] args: a=0 b=2 c=3
+// @ 6 s delta=6 [m] [thread] end
+```
 
 ----
 
