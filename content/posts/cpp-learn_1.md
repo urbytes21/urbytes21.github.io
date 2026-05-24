@@ -262,24 +262,24 @@ Some of the options typically does:
 ### 5.1. printf/snprintf Cheat Sheet {C / C++}
 #### Integer
 
-| Data type                         | Specifier | Notes           |
-| --------------------------------- | --------- | --------------- |
-| `int8_t` / `signed char`          | `%hhd`    | signed 8-bit    |
-| `uint8_t` / `unsigned char`       | `%hhu`    | unsigned 8-bit  |
-| `int16_t` / `short`               | `%hd`     | signed 16-bit   |
-| `uint16_t` / `unsigned short`     | `%hu`     | unsigned 16-bit |
-| `int32_t` / `long`                | `%ld`     | signed 32-bit   |
-| `uint32_t` / `unsigned long`      | `%lu`     | unsigned 32-bit |
-| `int64_t` / `long long`           | `%lld`    | signed 64-bit   |
-| `uint64_t` / `unsigned long long` | `%llu`    | unsigned 64-bit |
+| Data type                         | Specifier |
+| --------------------------------- | --------- |    
+| `int8_t` / `signed char`          | `%hhd`    |
+| `uint8_t` / `unsigned char`       | `%hhu`    |
+| `int16_t` / `short`               | `%hd`     |
+| `uint16_t` / `unsigned short`     | `%hu`     |
+| `int32_t` / `long`                | `%ld`     |
+| `uint32_t` / `unsigned long`      | `%lu`     |
+| `int64_t` / `long long`           | `%lld`    |
+| `uint64_t` / `unsigned long long` | `%llu`    |
 
 #### Floating point
 
-| Data type     | Specifier | Notes                       |
-| ------------- | --------- | --------------------------- |
-| `float`       | `%f`      | 4-byte float                |
-| `double`      | `%f`      | Arduino AVR: double = float |
-| `long double` | `%Lf`     | depends on platform         |
+| Data type     | Specifier |
+| ------------- | --------- |
+| `float`       | `%f`      |
+| `double`      | `%f`      |
+| `long double` | `%Lf`     |
 
 - `%e` -> scientific notation  
 - `%g` -> auto select `%f` or `%e`
@@ -312,17 +312,7 @@ Some of the options typically does:
 - `%.2f` -> 2 decimal digits  
 - `%*d` -> dynamic width  
 
-#### Specific Notes
-
-- `uint32_t` -> `%lu`  
-- `int32_t` -> `%ld`  
-- `uint16_t` -> `%u`  
-- `int16_t` -> `%d` or `%hd`  
-- `uint8_t` -> `%u` or `%hhu`  
-- `int8_t` -> `%d` or `%hhd`  
-- `float` -> `%f`  
-- Use `snprintf()` with correctly sized buffer to avoid overflow
-
+---
 ### 5.2. Command Line
 - Command line arguments are optional string arguments that are passed by the operating system to the program when it launch.
 - Passing command line arguments: we simply list the command line arguments right after the executable name.
