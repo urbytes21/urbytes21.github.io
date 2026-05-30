@@ -236,4 +236,15 @@ git checkout <branch> -- <file>
 ```
 
 ---
+
+## Useful VSCode Extensions
+- [Git Graph](https://marketplace.visualstudio.com/items?itemName=mhutchie.git-graph)
+- [Git History](https://marketplace.visualstudio.com/items?itemName=donjayamanne.githistory)
+
+
+---
+## Useful Eclipse Plugins
+- [EGit](https://projects.eclipse.org/projects/technology.egit)
+
+---
 TBD
