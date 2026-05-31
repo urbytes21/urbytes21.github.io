@@ -1,3 +1,16 @@
+---
+author: "Phong Nguyen"
+title: "C++ - Chapter 3: String"
+date: "2026-05-24"
+description: "C++ Notes"
+tags: ["cpp"]   #tags search
+FAcategories: ["syntax"]    #The category of the post, similar to tags but usually for broader classification.
+FAseries: ["Themes Guide"]    #indicates that this post is part of a series of related posts
+aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
+ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
+TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
+weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+---
 # String
 
 ## 1. C-Style String
@@ -132,7 +145,7 @@ int main() {
 
 int main() {
     // -------------------------------
-    // 1. Integer → String (itoa)
+    // 1. Integer to String (itoa)
     // -------------------------------
     char buf[32];
     itoa(1234, buf, 10);   // convert integer to string in base 10
@@ -142,7 +155,7 @@ int main() {
     // buf = "ff"
 
     // -------------------------------
-    // 2. String → Double (atof)
+    // 2. String to Double (atof)
     // -------------------------------
     double d1 = atof("3.14159");
     // d1 = 3.14159
@@ -151,7 +164,7 @@ int main() {
     // d2 = 12.5 (atof stops at non-numeric chars)
 
     // -------------------------------
-    // 3. String → Double (strtod)
+    // 3. String to Double (strtod)
     // -------------------------------
     char* end;
     double d3 = strtod("45.67abc", &end);
@@ -159,13 +172,13 @@ int main() {
     // end -> "abc"
 
     // -------------------------------
-    // 4. String → Long (strtol)
+    // 4. String to Long (strtol)
     // -------------------------------
     long v1 = strtol("1234", NULL, 10);
     // v1 = 1234 (decimal)
 
     long v2 = strtol("FF", NULL, 16);
-    // v2 = 255 (hex → decimal)
+    // v2 = 255 (hex to decimal)
 
     char* end2;
     long v3 = strtol("100xyz", &end2, 10);
@@ -204,6 +217,7 @@ s.at(0)     // bounds check
 s.front()   // first char
 s.back()    // last char
 ```
+
 ### 2.4. Modify String
 ```cpp
 /// @brief append
@@ -226,28 +240,29 @@ s.erase(new_end)
 // std::erase(s,'\n')
 s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
 ```
+
 ### 2.5. Substring
 ```cpp
 /// @brief std::string sub = s.substr(pos, len); , substr() does NOT modify original string
 std::string s = "abcdef";
 s.substr(2,3);   // "cde"
 ```
+
 ### 2.6. Find / Search
 ```cpp
 /// @brief find character
 s.find('a');
 
-
 /// @brief find last
 s.find('a');
-
 
 /// @brief find substring
 size_t pos = s.find("abc");
 if (pos != std::string::npos)
     std::cout << "found";
 ```
-### 2.6. Compare Strings
+
+### 2.7. Compare Strings
 ```cpp
 if (a == b)
 if (a != b)
@@ -258,7 +273,8 @@ if (a < b)
 // >0 -> larger
 auto ret = a.compare(b);
 ```
-### 2.7. Start/End Checking
+
+### 2.8. Start/End Checking
 ```cpp
 /// @brief C++20
 s.starts_with("abc");
@@ -269,7 +285,7 @@ s.rfind("abc",0) == 0
 s.size() >= 3 &&
 s.compare(s.size()-3,3,"xyz") == 0
 ```
-### 2.8. Convert String
+### 2.9. Convert String
 ```cpp
 /// @brief string to int
 int n = std::stoi(s);
@@ -279,7 +295,7 @@ double x = std::stod("3.14");
 std::string s = std::to_string(123);
 ```
 
-### 2.9. String Parsing
+### 2.10. String Parsing
 ```cpp
 #include <sstream>
 
@@ -292,13 +308,13 @@ while(std::getline(ss,item,',')) {
 }
 ```
 
-### 2.10. Trim Whitespace
+### 2.11. Trim Whitespace
 ```cpp
 s.erase(0, s.find_first_not_of(" \t\n\r"));
 s.erase(s.find_last_not_of(" \t\n\r") + 1);
 ```
 
-### 2.11. Convert Case
+### 2.12. Convert Case
 ```cpp
 #include <algorithm>
 
@@ -306,14 +322,14 @@ std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 ```
 
-### 2.12. String Formatting
+### 2.13. String Formatting
 
-| Method            | Standard | Pros                     | Cons                         |
-|------------------|----------|--------------------------|------------------------------|
-| `std::format`     | C++20    | Clean, safe, Python-like | Needs newer compiler         |
-| `+` concatenation | C++98    | Simple                   | Hard to format numbers       |
-| `stringstream`    | C++98    | Flexible streaming       | Slow, verbose                |
-| `snprintf`        | C        | Very fast, classic       | Unsafe if misused            |
+| Method            | Standard | Pros                     | Cons                   |
+| ----------------- | -------- | ------------------------ | ---------------------- |
+| `std::format`     | C++20    | Clean, safe, Python-like | Needs newer compiler   |
+| `+` concatenation | C++98    | Simple                   | Hard to format numbers |
+| `stringstream`    | C++98    | Flexible streaming       | Slow, verbose          |
+| `snprintf`        | C        | Very fast, classic       | Unsafe if misused      |
 
 ---
 ## 3. std::cout << , std::cin >> , std::getLine(std::cin >> std::ws, std::string string)

@@ -13,7 +13,7 @@ weight: 1    # The order in which the post appears in a list of posts. Lower num
 ---
 
 ## 1. Introduction
-C++ was developed as an extension to C. It adds man few features to the C language, and tis perhaps best through of as a superset of C. 
+C++ was developed as an extension to C. It adds many few features to the C language, and tis perhaps best through of as a superset of C. 
 
 **Step 1:** Define the problem that you would like to solve
 - I want to write a program that will ...
@@ -94,12 +94,18 @@ int main()
                 |      Initialized Data       | => Global/static variables are initialized with values:
                 |           .data             |
                 |                             |     int global_val = 100;                       ///< Global variable has initialized
-                |                             |     void f(){ static int val = 0};              ///< Static variable has initialized
+                |                             |     void f(){ static int val = 1};              ///< Static variable has initialized
+                +-----------------------------+
+                +-----------------------------+
+                |      Initialized Data       | => Global/static variables are initialized with values:
+                |           .data             |
+                |                             |     int global_val = 100;                       ///< Global variable has initialized
+                |                             |     void f(){ static int val = 1};              ///< Static variable has initialized
                 +-----------------------------+
                 +-----------------------------+
                 |          Text/Code          | => Read only data: 
                 |           .text             |     
-                |                             |     printf("Hello World");                      ///< String literals
+                |           .rodata           |     printf("Hello World");                      ///< String literals
                 |                             |     const uint32_t BACCATE = 115200             ///< const global variables
                 |                             |     __asm__ volatile("nop"); void f(){};        ///< Program instructions & Compiled machine code
 [Low Address]   +-----------------------------+

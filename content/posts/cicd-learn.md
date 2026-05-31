@@ -1,8 +1,8 @@
 ---
 author: "Phong Nguyen"
-title: "CI/CD Guide"
+title: "CI/CD Notes"
 date: "2026-03-12"
-description: "CI/CI Learning."
+description: "CI/CI Notes"
 tags: ["ci,cd,docker,git"]   #tags search
 FAcategories: ["syntax"]    #The category of the post, similar to tags but usually for broader classification.
 FAseries: ["Themes Guide"]    #indicates that this post is part of a series of related posts
@@ -12,7 +12,105 @@ TocOpen: true    # Controls whether the TOC is expanded when the post is loaded.
 weight: 10   # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
 ## 1. Introduce
+CI/CD is a continuous method of software development, where you continuously build, test, deploy, and monitor iterative code changes.
+- **CI - Continue Integration** used to make sure new code integrates cleanly with the existing codebase. (Can this code be safely merged?)
+- **CD - Continue Delivery / Continues Deployment** used to handle releasing the software
+  - Continuous Delivery: The system automatically prepares a release, but deployment to production requires manual approval.
+  - Continuous Deployment: Everything is automatic.
 
+- Example:
+```bash
+Developer pushes code
+        │
+        v
+      [ CI ]
+        │
+        ├─ Build #Compiled application
+        ├─ Run tests #Test report
+        ├─ Static analysis / linting #Code quality report
+        └─ Notify results #Build status (Pass/Fail)
+        │
+        v
+    CI Passed
+        │
+        ▼
+      [ CD ]
+        │
+        ├─ Create release artifact #Firmware (.bin), package, installer, etc.
+        ├─ Deploy to staging #Staging environment updated
+        ├─ Manual approval (Continuous Delivery) #Deployment approval
+        └─ Automatic deployment (Continuous Deployment) #Production environment updated
+        │
+        v
+      Release
+```
+
+## 2. GitLab CI/CI
+### Concepts:
+- **Job** is an individual task within a pipeline, such as building the project, running tests, or deploying an application.
+- **Pipeline** is an automated workflow consisting of multiple stages and jobs that build, test, and deploy code changes.
+- **Runner** is an agent that picks up and executes the jobs, it can run on physical machines or virtual instances. 
+- **Agent** is a program or service that performs tasks on behalf of another system. (Gitlab Runner, Github Action Runner, Kubernetes Agent ...)
+- **Jobs** specify the tasks to be performed in each stage. For example, a job can compile or test code.
+- **Stages** define the order of execution. Typical stages might be build, test, and deploy.
+- **Component** is a reuseable pipeline configuration unit to compose an entire pipeline configuration or a small part of a larger pipeline. 
+
+### Step 1: Configure pipeline
+- A `.gitlab-ci.yml` file at the root of the project, contains pipeline, and executes when the file runs on a runner.
+
+- E.g: Create a .gitlab-ci.yml and commit to a repo
+```yml
+# .gitlab-ci.yml
+
+stages: # List of stages for jobs, order of execution
+  - build
+  - test
+  - deploy
+
+build-job:
+  stage: build # runs in the `build` stage
+  script:
+    - echo "Compiling code..."
+    - sleep 10
+    - echo "Build complete."
+
+test-job-1:
+  stage: test
+  script:
+    - echo "Running test 1..."
+    - sleep 10
+    - echo "Test code coverage 99%"
+
+test-job-2:
+  stage: test # can run that the same time as test-job-1
+  script:
+    - echo "Running test 2..."
+    - sleep 10
+    - echo "Test code coverage 99%"
+
+deploy-job:
+  stage: deploy
+  environment: production
+  script:
+    - echo "Deploying application..."
+    - echo "Application successfully deployed."
+```
+
+### Step 2: Find/Create runners
+- Register runners or use runners already registered for your GitLab Self-Managed instance.s
+- Create a runner on your local machine.
+
+### Step 3: Use CI/CD variables and expressions
+- CD/CI variables includes custom variables and predefined variables
+
+- CI/CD expression use the `$[[]]` to enable dynamic configuration based on different contexts:
+  - Input context `$[[ inputs.INPUT_NAME ]]`: Access typed parameters passed into configuration files with include:inputs or when a new pipeline is run
+  - Matrix context `$[[ matrix.IDENTIFIER ]]`:  Access matrix values in job dependencies to create 1:1 mappings between matrix jobs
+
+### Step 4: User CI/CD Component
+- Add a component to the pipeline configuration with `include:component`
+
+---
 ## 2. Docker:
 1.  Docker is an open platform for developing, shipping, and running applications. Docker enables you to separate your applications from your infrastructure so you can deliver software quickly. With Docker, you can manage your infrastructure in the same ways you manage your applications. By taking advantage of Docker's methodologies for shipping, testing, and deploying code, you can significantly reduce the delay between writing code and running it in production.
 
@@ -59,14 +157,10 @@ FROM ubuntu:24.04
 RUN \
     # updates the package lists for upgrades for packages that need upgrading,
     apt-get update && \
-    # install cmake, gcc, g++
     apt-get install -y cmake && \
     apt-get install -y gcc g++  && \
-    # install cppcheck
     apt-get install -y cppcheck && \
-    # install clang tidy
     apt-get install -y clang-tidy && \
-    # install lcov
     apt-get install -y lcov
 
 # Set the working directory inside the Docker image
