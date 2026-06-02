@@ -178,7 +178,7 @@ std::istream& operator>>(std::istream& is, T& obj)
   - `[](){ ... }` defines a lambda
   - `[](){ ... }()` defines and immediately CALLS it
 
-### Capture Clause
+##### Capture Clause
 - It uses to introduce new variables in its body, specifics which vars are captured, and whether the capture is `by value[=]` or `by reference [&]`. 
 - An empty capture clause `[]` indicates that the body accesses no vars in the enclosing scope.
 - An identifier or `this` cannot appear more than once in a capture scope.

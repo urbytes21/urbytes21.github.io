@@ -21,871 +21,8 @@ See plus plus :) .
 2. [Fundamentals](cpp-learn_2_fundamentals.md)
 2. [String](cpp-learn_3_string.md)
 
-## 11. Scope, duration, and linkage summary
-> A variable’s duration determines when it is created and destroyed.
-Variables with automatic duration: are created at the point of definition, and destroyed when the block they are part of is exited. This includes:
-    - Local variables
-    - Function parameters
-Variables with static duration: are created when the program begins and destroyed when the program ends. This includes:
-    - Global variables
-    - Static local variables
-Variables with dynamic duration:  are created and destroyed by programmer request. This includes:
-    - Dynamically allocated variables
-
-> extern	static (or thread_local) storage duration and external linkage	
-static	static (or thread_local) storage duration and internal linkage	
-thread_local	thread storage duration	
-mutable	object allowed to be modified even if containing class is const	
-auto	automatic storage duration	Deprecated in C++11
-register	automatic storage duration and hint to the compiler to place in a register	Deprecated in C++17
-
-- When you write an implementation file (.cpp, .cxx, etc) your compiler generates a translation unit. This is the source file from your implementation plus all the headers you #included in it.
-Internal linkage refers to everything only in scope of a translation unit.
-External linkage refers to things that exist beyond a particular translation unit. In other words, accessible through the whole program, which is the combination of all translation units (or object files).
-
-![image](/images/learncpp_1.png)
-
-<br>
-
-### 11.1. Internal linkage
-- An identifier’s linkage determines whether a declaration of that same identifier in a different scope refers to the same entity (object, function, reference, etc…) or not.
-
-- An identifier with no linkage means another declaration of the same identifier refers to a unique entity. Entities whose identifiers have no linkage include:
-Local variables
-Program-defined type identifiers (such as enums and classes) declared inside a block
-
-- An identifier with `internal linkage` means a declaration of the same identifier within the same translation unit refers to the same object or function. Entities whose identifiers have internal linkage include:
-    - Static global variables (initialized or uninitialized)
-    - Static functions
-    - Const global variables
-    - Unnamed namespaces and anything defined within them
-- To make things to internal linkage, we can:
-  - `static` global variables/functions
-  - `const` and `constexpr` globals ((and thus don’t need the static keyword -- if it is used, it will be ignored)) ## C
-  - unnamed namespace { ... } (modern C++)
-
-- `static` <global_variable>: make the global variable  to internal linkage
-- `static` <local_variable>: changes its duration from automatic duration to static duration. And its initializer is only executed once.
-- `static` <const/constexpr local_varialbe>: used to avoid expensive local object initialization each time a function is called because it inits once time.
-
-- Internal linkage for const global variables can change to external with the keyword `extern`. e.g. `extern const PI = 3.14;`
-- e.g.
-```cpp
-// a.cpp ============================================================
-#include <iostream>
-
-static int g_internal { 42 };    // internal linkage (only in a.cpp)
-static void helper() {           // internal function
-    std::cout << "Helper in a.cpp\n";
-}
-
-int main() {
-    std::cout << g_internal << '\n'; // OK
-    helper();                         // OK
-    return 0;
-}
-
-// main.cpp ============================================================
-extern int g_internal; //  ERROR: g_internal not visible outside a.cpp
-void helper();         //  ERROR: helper not visible outside a.cpp
-
-int main() {
-    // g_internal; // linker error if uncommented
-    // helper();   // linker error if uncommented
-    return 0;
-}
-```
-
-### 11.2. External linkage
-- An identifier with `external linkage` means a declaration of the same identifier within the entire program refers to the same object or function. Entities whose identifiers have external linkage include:
-    - Non-static functions
-    - Non-const global variables (initialized or uninitialized)
-    - Extern const global variables
-    - Inline const global variables
-    - Namespaces
-- `functions`: default external linkage
-- `global variables`: 
-  - `non-const globals`: external by default.
-  - `const/constexpr globals`: internal by default
-- To access an external global variable from another file, use `extern` without initializer (forward declaration).
-
-- e.g.
-```cpp
-// a.cpp ============================================================
-#include <iostream>
-
-int g_external { 100 };            // external by default
-extern const int g_limit { 200 };  // const made external
-
-void sayHello() {                  // external by default
-    std::cout << "Hello from a.cpp\n";
-}
-
-// main.cpp ============================================================
-#include <iostream>
-
-extern int g_external;       // forward declaration 
-extern const int g_limit;    // forward declaration > < const int g_limit: definition
-void sayHello();             // forward declaration
-
-int main() {
-    sayHello();
-    std::cout << g_external << " / " << g_limit << '\n';
-    return 0;
-}
-```
-
-### 11.3. Inline functions and variables
-> When a call to min() is encountered, the CPU must store the address of the current instruction it is executing (so it knows where to return to later) along with the values of various CPU registers (so they can be restored upon returning). Then parameters x and y must be instantiated and then initialized. Then the execution path has to jump to the code in the min() function. When the function ends, the program has to jump back to the location of the function call, and the return value has to be copied so it can be output. This has to be done for each function call.
-All of the extra work that must happen to setup, facilitate, and/or cleanup after some task (in this case, making a function call) is called overhead.
-#include <iostream>
-int min(int x, int y)
-{
-    return (x < y) ? x : y;
-}
-int main()
-{
-    std::cout << min(5, 6) << '\n';
-    std::cout << min(3, 2) << '\n';
-    return 0;
-}
-For functions that are large and/or perform complex tasks, the overhead of the function call is typically insignificant compared to the amount of time the function takes to run. However, for small functions (such as min() above), the overhead costs can be larger than the time needed to actually execute the function’s code! In cases where a small function is called often, using a function can result in a significant performance penalty over writing the same code in-place.
-However, inline expansion has its own potential cost: if the body of the function being expanded takes more instructions than the function call being replaced, then each inline expansion will cause the executable to grow larger.
-
-- `inline-expansion`:
-  - is a process where a function call is replaced by the code from the called function’s definition.
-  - use this to avoid such overhead cost.
-  - do not use the `inline` keyword to request inline expansion for your functions, because optimizing compilers.
-- `modernly-inline`: 
-  - should not implement functions (with external linkage) in header files because it lead to `multiple definitions` error.
-  - so we can use `inline-function`, it's useful for header-only libraries
-
-### 11.4. Sharing global constants
-- 1. `global constants as internal variables`: 
-  - Advantages:
-    - Works prior to C++16.
-    - Can be used in constant expressions in any translation unit that includes them.
-  - Downsides:
-    - Changing anything in the header file requires recompiling files including the header.
-    - Each translation unit including the header gets its own copy of the variable.
-- e.g.
-```cpp
-// constants.h:============================================================
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
-
-// Define your own namespace to hold constants
-namespace constants
-{
-    // Global constants have internal linkage by default
-    constexpr double pi { 3.14159 };
-    constexpr double avogadro { 6.0221413e23 };
-    constexpr double myGravity { 9.2 }; // m/s^2 -- gravity is light on this planet
-    // ... other related constants
-}
-#endif
-
-// main.cpp::============================================================
-#include "constants.h" // include a copy of each constant in this file
-#include <iostream>
-
-int main()
-{
-    std::cout << "Enter a radius: ";
-    double radius{};
-    std::cin >> radius;
-
-    std::cout << "The circumference is: " << 2 * radius * constants::pi << '\n';
-
-    return 0;
-}
-```
-
-<br>
-
-- 2. `global constants as external variables`: 
-  - Advantages:
-    - Works prior to C++16.
-    - Only one copy of each variable is required.
-    - Only requires recompilation of one file if the value of a constant changes.
-  - Downsides:
-    - Forward declarations and variable definitions are in separate files, and must be kept in sync.
-    - Variables not usable in constant expressions outside of the file in which they are defined.
-- e.g.
-```cpp
-// constants.h:============================================================
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
-
-namespace constants
-{
-    // Since the actual variables are inside a namespace, the forward declarations need to be inside a namespace as well
-    // We can't forward declare variables as constexpr, but we can forward declare them as (runtime) const
-    extern const double pi;
-    extern const double avogadro;
-    extern const double myGravity;
-}
-
-#endif
-
-// constants.cpp:============================================================
-#include "constants.h"
-
-namespace constants
-{
-    // We use extern to ensure these have external linkage
-    extern constexpr double pi { 3.14159 };
-    extern constexpr double avogadro { 6.0221413e23 };
-    extern constexpr double myGravity { 9.2 }; // m/s^2 -- gravity is light on this planet
-}
-
-// main.cpp::============================================================
-#include "constants.h" // include all the forward declarations
-#include <iostream>
-
-int main()
-{
-    std::cout << "Enter a radius: ";
-    double radius{};
-    std::cin >> radius;
-
-    std::cout << "The circumference is: " << 2 * radius * constants::pi << '\n';
-
-    return 0;
-}
-```
-- 3. `global constants as inline variables`: 
-  - If you need global constants and your compiler is C++17 capable, prefer defining inline constexpr global variables in a header file.
-  - Advantages:
-    - Can be used in constant expressions in any translation unit that includes them.
-    - Only one copy of each variable is required.
-  - Downsides:
-    - Only works in C++17 onward.
-    - Changing anything in the header file requires recompiling files including the header.
-- e.g.
-```cpp
-// constants.h:============================================================
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
-
-// define your own namespace to hold constants
-namespace constants
-{
-    inline constexpr double pi { 3.14159 }; // note: now inline constexpr
-    inline constexpr double avogadro { 6.0221413e23 };
-    inline constexpr double myGravity { 9.2 }; // m/s^2 -- gravity is light on this planet
-    // ... other related constants
-}
-#endif
-
-// main.cpp::============================================================
-#include "constants.h"
-#include <iostream>
-
-int main()
-{
-    std::cout << "Enter a radius: ";
-    double radius{};
-    std::cin >> radius;
-
-    std::cout << "The circumference is: " << 2 * radius * constants::pi << '\n';
-
-    return 0;
-}
-```
-
-
-
-## 13. Error Detection and Handling
-
-
-
-### 14.5. Type deduction using auto keyworld
-- Type deduction allows the compiler to deduce the type of an object from the object’s initializer. 
-- using `auto` keyworld.
-- Type deduction must have something to deduce from
-- Type deduction drops const from the deduced type
-- ... (more)
-- Use type deduction for your variables when the type of the object doesn’t matter.
-- Auto can also be used as a function return type to have the compiler infer the function’s return type from the function’s return statements, though this should be avoided for normal functions.
-- The auto keyword can also be used to declare functions using a trailing return syntax, where the return type is specified after the rest of the function prototype.
-- e.g.
-```cpp
-int add(int x, int y)
-{
-  return (x + y);
-}
-
-// Using the trailing return syntax, this could be equivalently written as:
-auto add(int x, int y) -> int
-{
-  return (x + y);
-}
-
-#include <type_traits> // for std::common_type
-
-std::common_type_t<int, double> compare(int, double);         // harder to read (where is the name of the function in this mess?)
-auto compare(int, double) -> std::common_type_t<int, double>; // easier to read (we don't have to read the return type unless we care)
-```
-
-<br>
-
-
-## 15. Function Overloading and Function Templates
-
-
-<br>
-
-## 16. Compound Types: References and Pointers
-
-| Type            | Meaning                                                                                                           | Examples                              |
-|-----------------|-------------------------------------------------------------------------------------------------------------------|---------------------------------------|
-| **Fundamental** | A basic type built into the core C++ language                                                                    | `int`, `std::nullptr_t`               |
-| **Compound**    | A type defined in terms of other types                                                                            | `int&`, `double*`, `std::string`, `Fraction` |
-| **User-defined** | A class type or enumerated type <br> (Includes those defined in the standard library or implementation) <br> (In casual use, typically used to mean program-defined types) | `std::string`, `Fraction`             |
-| **Program-defined** | A class type or enumerated type <br> (Excludes those defined in standard library or implementation)            | —                                     |
-
-- `Compound data types` (also called composite data type) are data types that can be constructed from fundamental data types (or other compound data types).
-### 16.1. lvalues and rvalues
-- `lvalues` is an expression that evaluates to an identifiable object or function (or bit-field). Can be accessed via an identifier, reference, or pointer, and typically have a lifetime longer than a single `expression` or `statement`.
-- `rvalues` is an expression that evaluate to a value. Only exist within the scope of the expression in which they are used.
-- `lvalues` can be used anywhere an `rvalue` is expected.
-- An **assignment operation** requires its `left` operand to be a modifiable `lvalue` expression. And its `right` operand to be a `rvalue` expression.
-
-### 16.2. References
-- **references** is an alias for an existing object/function. `reference` itself is like a `const pointer`
-  - Declared as `<type>& reference_name`
-  - Any operation on the reference is applied to the object being referenced.
-  - All references must be initialized.
-  - Cannot be reseated.
-  - They aren't objects
-  - Can only accept modifiable lvalue arguments (const or non-const)
-
-- **pass-by-reference** allows us:
-  - to pass arguments to a function without making copies of those arguments each time the function is called. (class types)
-  - to change the value of an argument
-
-- **pass-by-const-reference** guaranteeing that the function can not change the value being referenced.
-- **lvalue-reference** just a reference for an existing lvalue.
-- **lvalue-reference-types** determines what type of object it can reference by using a single ampersand  `<type>&` .
-- **lvalue-reference-variable** is a variable that acts as a reference to an lvalue.
-- **lvalue-reference-to-const** can bind with const or non-const objects. `const <type>& name`
-
->The const applies to what is immediately to its left, unless there’s nothing to its left, in which case it applies to what’s on the right.
-
-- E.g.
-```cpp
-#include <iostream>
-#include <string>
-
-// ---------------------------
-// Example of references
-// ---------------------------
-void increment(int& x) {   // pass-by-reference (modifiable lvalue reference)
-    x += 1;                // changes original argument
-}
-
-void printConstRef(const std::string& s) { // pass-by-const-reference
-    // s cannot be modified here
-    std::cout << "Const-ref: " << s << "\n";
-}
-
-int main() {
-    int a = 10;
-    
-    // ---- Reference basics ----
-    int& ref = a;       // reference must be initialized
-    ref = 20;           // modifies 'a', since ref is just an alias
-    std::cout << "a = " << a << "\n";  // prints 20
-    
-    // Cannot reseat: once 'ref' is bound to 'a', it cannot be bound to another variable
-    int b = 30;
-    // ref = &b;   invalid, would assign value instead of rebinding
-    
-    // ---- Pass by reference ----
-    increment(a);  // modifies original 'a'
-    std::cout << "a after increment = " << a << "\n"; // prints 21
-
-    // ---- Pass by const reference ----
-    std::string text = "Hello";
-    printConstRef(text);  // avoids making a copy
-
-    // ---- Lvalue reference variable ----
-    int& lref = a;  // lref is an lvalue-reference-variable to 'a'
-    lref += 5;      // modifies 'a'
-    std::cout << "a after lref += 5: " << a << "\n";
-
-    // ---- Lvalue reference to const ----
-    const int x = 100;
-    const int& cref1 = x; // bind to const object
-    const int& cref2 = a; // also works with non-const object
-    std::cout << "cref1 = " << cref1 << ", cref2 = " << cref2 << "\n";
-    
-    // ---- They aren't objects ----
-    // sizeof(ref) == sizeof(a), because ref is just an alias
-    std::cout << "sizeof(a) == sizeof(ref): "
-              << (sizeof(a) == sizeof(ref)) << "\n";
-
-    return 0;
-}
-```
-
-### 16.3. Pointer
-- **address-of-operator (&<variable>)** returns the memory address of its operand, **but not as an address literal. Instead, it returns a pointer to the operand.** This pointer holds the address value, and when passed to cout, the stream simply prints that value.
-- **dereference-operator  (*<address>)** returns the value at a given memory address as an lvalue, used to access the object being pointed at.
-- **pointer** is an object that holds a memory address as its value:
-  - declared as `<type>* ptr_name`
-  -  This allows us to store the address of some other object to use later.
-  -  we should init the pointers.
-  -  the size of pointer is allways the same (32 or 64-bit architecture)
-  -  can assign an invalid pointer a new value, such as `nullptr`
-  -  `wild pointer`: pointer that has not been initialized is sometimes called a .
-  -   `dangling pointer`: pointer that is holding the address of an object that is no longer valid
-- **pointer-type** is a type that specifies a pointer (like reference-type) by using an asterisk `(<type>*)`.The type of the pointer has to match the type of the object being pointed at.
-- **null-pointer** (its type is `std::nullptr_t`) means something has no value. It often associated with memory address 0. 
-
-- **pointer-to-const**: that points to a value that cannot be modified through the pointer, but the pointer itself is not const.
-  - declared as `const <type> ptr_name*`.
-  - cannot change the value being pointed to, but can make the pointer point to a different address.
-  - may also point to non-const variables.
-- **const-pointer**: whose stored address cannot be changed after initialization, but the value at that address can be modified.
-  - declared as `<type>* const ptr_name`.
-  - fixed to one address, but we can change the value at that address.
-- **const-pointer-to-const**: cannot be reseated (address fixed) and cannot modify the value it points to.
-  - declared as `const <type>* const ptr_name`.
-  - can only be dereferenced to read the value.
->pointer-to-pointer
-void allocateArray(int** ptr, int size) {
-    *ptr = new int[size]; // allocate memory and update the original pointer
-}
-int* myArray = nullptr;
-allocateArray(&myArray, 5);
-myArray[0] = 10; // works
-delete[] myArray;
-- e.g.
-```cpp
-#include <iostream>
-#include <cstdint>  // for uintptr_t
-
-int main() {
-    int x = 42;
-
-    // address-of operator (&) returns a pointer to x (not an address literal)
-    int* ptr = &x;  
-    
-    // Printing the pointer: cout prints the stored address value
-    std::cout << "Address of x (&x): " << &x << "\n";
-    std::cout << "Value stored in pointer (ptr): " << ptr << "\n";
-
-    // dereference operator (*) gives access to the value at the stored address
-    std::cout << "Value of x via *ptr: " << *ptr << "\n";
-
-    // a pointer is an object that holds a memory address
-    // we can change its value
-    ptr = nullptr;  
-    std::cout << "Pointer reset to nullptr: " << ptr << "\n";
-
-    // pointer type is declared with '*'
-    double d = 3.14;
-    double* pd = &d;    // type matches: double* for double
-    // uintptr_t lets us see the raw numeric value of the address
-    std::cout << "Numeric address of d: " << (uintptr_t)pd << "\n";
-    std::cout << "Value of d via *pd: " << *pd << "\n";
-    
-    // NullPTR =======
-    int* myNullPtr {};        // value-initialized to nullptr
-    int* myNullPtr2 {nullptr}; // explicitly initialized to nullptr
-
-    // Old C-style (still works, but less safe in C++):
-    // int* myNullPtr3 {NULL};   // requires <cstddef>
-    
-    // Const ptr =======
-    int a = 10;
-    int b = 20;
-    // 1. pointer-to-const (const int*)
-    const int* p1 = &a;      // can point to non-const variable
-    // *p1 = 15;             //  error: cannot modify value through p1
-    p1 = &b;                 //  can point to another address
-    std::cout << "p1 points to: " << *p1 << '\n';
-    // 2. const-pointer (int* const)
-    int* const p2 = &a;      // must be initialized, fixed address
-    *p2 = 30;                //  can modify the value at that address
-    // p2 = &b;              //  error: cannot change stored address
-    std::cout << "p2 points to: " << *p2 << '\n';
-    // 3. const-pointer-to-const (const int* const)
-    const int* const p3 = &b; // fixed address + read-only value
-    // *p3 = 40;             //  error: cannot modify value
-    // p3 = &a;              //  error: cannot reseat pointer
-    std::cout << "p3 points to: " << *p3 << '\n';
-       
-
-    return 0;
-}
-```
-
-- **pointer-to-pointers**:
-	- a pointer that holds the address of another pointer.
-	- Using two asterisks to declare a pointer to pointer.
-	- e.g. `int** ptrptr;`
-	- Usages:
-		- Dynamically allocate an array of pointers
-		- e.g. `int** array { new int*[10] }; // allocate an array of 10 int pointers`
-		- Two-dimensional dynamically allocated arrays
-		- e.g. `int x { 7 }; // non-constant
-int (*array)[5] { new int[x][5] }; // rightmost dimension must be constexpr`
-
-<br>
-
-- **void-pointers**: Also known as the generic pointer, is a special type of pointer that can be pointed at objects of any data type
-	- Dereferencing a void pointer is illegal. Instead, the void pointer must first be cast to another pointer type before the dereference can be performed.
-	- We do not know what type of object it is pointing to, deleting a void pointer will result in undefined behavior.
-
-<br>
-
-- **function-pointers**:
-  - e.g.
-    ```cpp
-        // fcnPtr is a pointer to a function that takes no arguments and returns an integer
-        int (*fcnPtr)();
-    ```
-
-  - Assigning a function to a function pointer: just like a normal pointer, and the type (parameters and return type) of the function pointer must match the type of the function. 
-  - e.g.
-    ```cpp
-    // function prototypes
-    int foo();
-    double goo();
-    int hoo(int x);
-    
-    // function pointer initializers
-    int (*fcnPtr1)(){ &foo };    // okay
-    int (*fcnPtr2)(){ &goo };    // wrong -- return types don't match!
-    double (*fcnPtr4)(){ &goo }; // okay
-    fcnPtr1 = &hoo;              // wrong -- fcnPtr1 has no parameters, but hoo() does
-    int (*fcnPtr3)(int){ &hoo }; // okay
-    ```
-
-  - Calling a function using function pointer: There are two way to do this
-    - Explicitly derefence
-    - Implicitly derefence
-  - e.g.
-    ```cpp
-    int foo(int x)
-    {
-        return x;
-    }
-    
-    int main()
-    {
-        int (*fcnPtr)(int){ &foo }; // Initialize fcnPtr with function foo
-        (*fcnPtr)(5); // call function foo(5) through fcnPtr.
-    
-    	int (*fcnPtr2)(int){ &foo }; // Initialize fcnPtr with function foo
-        fcnPtr2(5); // call function foo(5) through fcnPtr2.
-    	
-        return 0;
-    }
-    ```
-  - Passing functions as arguments to other functions: One of the most useful things to do with function pointers is pass a function as an argument to another function. Functions used as arguments to another function are sometimes called **callback functions**.
-
-<br>
-	
-### 16.4. Pass by value/reference/address
-
-```cpp
-#include <iostream>
-#include <string>
-
-void printByValue(std::string val) // The function parameter is a copy of str
-{
-    std::cout << val << '\n'; // print the value via the copy
-}
-
-void printByReference(const std::string& ref) // The function parameter is a reference that binds to str
-{
-    std::cout << ref << '\n'; // print the value via the reference
-}
-
-void printByAddress(const std::string* ptr) // The function parameter is a pointer that holds the address of str
-{
-    std::cout << *ptr << '\n'; // print the value via the dereferenced pointer
-}
-
-int main()
-{
-    std::string str{ "Hello, world!" };
-
-    printByValue(str); // pass str by value, makes a copy of str
-    printByReference(str); // pass str by reference, does not make a copy of str
-    printByAddress(&str); // pass str by address, does not make a copy of str
-
-    return 0;
-}
-```
-- **pass-by-address** allows us: ~ **pass-by-references**
-  - to pass arguments to a function without making copies of those arguments each time the function is called. (class types)
-  - to change the value of an argument
-  - #null checking
-> Pass by reference when you can, pass by address when you must
-
-- **!! C++ really passes everything by value**
-
-### 16.5. Return by value/reference/address
-- **T returnValue(...)**: returns a copy (or move) of the object. The caller gets its own value.
-- **T& returnReference(...)** returns a reference to an existing object. The caller does not own it, so the object must outlive the reference.
-- **T * returnAddress(...)** returns a pointer (an address) to an object. The caller must handle the pointer carefully (ensure it’s valid and points to a live object).
-
-- `return-by-reference`:
-  - avoids making a copy of the object.
-  - the referenced object must live beyond the scope of the function, otherwise the reference will dangle.
-  - never return a non-static local variable or temporary by reference.
-- `return-by-address` works almost identically to return-by-reference.
-- `return-by-value` just make a copy
-> Prefer return by reference over return by address unless the ability to return “no object” (using nullptr) is important.
-
-- e.g.
-```cpp
-#include <iostream>
-
-int global = 42;
-
-// Return by value: makes a copy
-int returnValue() {
-    int x = 10;
-    return x; // copy returned
-}
-
-// Return by reference: must refer to existing object
-int& returnReference() {
-    return global; // safe: global outlives the function
-}
-
-// Return by address: returns a pointer
-int* returnAddress(bool valid) {
-    if (valid)
-        return &global; // valid pointer
-    else
-        return nullptr; // no object
-}
-
-int main() {
-    int a = returnValue();
-    std::cout << "By value: " << a << '\n';
-
-    int& b = returnReference();
-    std::cout << "By reference: " << b << '\n';
-    b = 100; // modifies global
-    std::cout << "Global after modification: " << global << '\n';
-
-    int* c = returnAddress(true);
-    if (c) std::cout << "By address: " << *c << '\n';
-
-    int* d = returnAddress(false);
-    if (!d) std::cout << "By address: got nullptr\n";
-}
-```
-
-### 16.6. In/Out Params
-- `in-parameters`:are typically passed `by value` or `by const reference`
-- `out-parameters`:a function parameter that is used only for the purpose of returning information back to the caller.
-  - Avoid out-parameters (except in the rare case where no better options exist).
-  - Prefer pass by reference for non-optional out-parameters.
-
-- e.g.
-```cpp
-#include <iostream>
-#include <string>
-
-// In-parameter by value (cheap to copy)
-void greet(std::string name) {
-    std::cout << "Hello, " << name << "!\n";
-}
-
-// In-parameter by const reference (avoid copy for large objects)
-int length(const std::string& text) {
-    return text.size();
-}
-
-// Out-parameter by reference (rare case)
-void square(int input, int& output) {
-    output = input * input;
-}
-
-int main() {
-    // in-parameter by value
-    greet("Alice");
-
-    // in-parameter by const reference
-    std::string msg = "Hello World";
-    std::cout << "Length = " << length(msg) << "\n";
-
-    // out-parameter by reference (not preferred, but possible)
-    int result;
-    square(5, result);
-    std::cout << "Square = " << result << "\n";
-}
-```
-
-### 16.7. Type deduction (auto) with pointers, references, and const
-https://www.learncpp.com/cpp-tutorial/type-deduction-with-pointers-references-and-const/
-
-### 16.8. std::optional
-https://www.learncpp.com/cpp-tutorial/stdoptional/
-
-## 18. Compound Types: Enums and Structs
-- `program-defined-types` are types that programmers create themself.
-> In C++, struct, class, and union automatically create a new type name, so you don’t need to prefix variables with the keywords struct or union as in C.
-### 18.1. Enumerations
-- `enum` is a compound types where every possible value is defined as a symbolic constant.
-- Named starting with a capital letter. Named enumerators starting with a lower case letter.
-- `unscoped-enum`: put their enumerator names into the same scope as the enumeration definition itself 
-- `scoped-enum`: keep their enumerators inside the enum’s own scope.Using `enum class` keyworld.
-- `using enum <EnumName>` statement imports all the emnumerators from an enum into the current scope. 
-- putting your enumerations inside a named scope region (such as a namespace or class) so the enumerators don’t pollute the global namespace.
-- Specify the base type of an enumeration only when necessary.
-- e.g.
-```cpp
-#include <iostream>
-#include <cstdint>   // for uint8_t
-
-//  Good naming style:
-// Enum name: Capitalized
-// Enumerator names: lowercase
-
-enum Color {
-    red,
-    green,
-    blue
-};
-
-//  Scoped enum — enumerators are inside the enum’s scope
-enum class Shape {
-    circle,
-    square,
-    triangle
-};
-
-//  Scoped enum inside a namespace — prevents name pollution
-namespace Game {
-    enum class Direction {
-        up,
-        down,
-        left,
-        right
-    };
-}
-
-//  Scoped enum with explicit base type
-enum class Status : uint8_t {
-    ok = 0,
-    error = 1,
-    unknown = 2
-};
-
-int main() {
-    // Using unscoped enum
-    Color c = red;               //  direct access (same scope)
-    std::cout << "Color value: " << c << "\n";
-
-    // Using scoped enum
-    Shape s = Shape::circle;     //  must use scope name
-    if (s == Shape::circle)
-        std::cout << "Shape is circle\n";
-
-    // Scoped enum inside namespace
-    Game::Direction dir = Game::Direction::up;
-    if (dir == Game::Direction::up)
-        std::cout << "Direction is up\n";
-
-    // Scoped enum with base type
-    Status st = Status::ok;
-    if (st == Status::ok)
-        std::cout << "Status OK (base type uint8_t)\n";
-
-    return 0;
-}
-```
-
-- **Union**: https://www.geeksforgeeks.org/cpp/cpp-unions/
-
-### 18.2. Struct
-- A **struct** is a *class type* (just like `classes` or `union`),  allows us to bundle multiple variables together into a single type. As such, anything that applies to class types applies to structs.
-- **Defining structs** using `struct` keywords.
-- **Access struct members**:
-  - Use member selection operator(dot operator) `.` for reference/object.
-  - Use arrow operator `->` for pointers. `ptr->id = (*ptr).id`
-- **Initialization**: 
-  - using brace-initialization `{}` or by defining default member values.
-  - should provide a default value for all members
-  - Struct aggregate initializations:
-```cpp
-    Employee frank = { 1, 32, 60000.0 }; // copy-list initialization using braced list
-    Employee joe { 2, 28, 45000.0 };     // list initialization using braced list (preferred)
-``` 
-- **Passing and returning structs**:
-  - Passingy reference (efficient and avoids copying)
-  - Passing temporary 
-  - Create a struct variable and return
-  - Returning a temporary (unnamed/anonymous) object 
-- **Struct size and data structure alignment**:the size of a struct will be at least as large as the size of all the variables it contains. But it could be larger! For performance reasons, the compiler will sometimes add gaps into structures this is called **padding**. We can minimize padding by defining your members in **decreasing order of size**.(e.g., double → int → char).
-
-- e.g.
-```cpp
-#include <iostream>
-#include <string>
-using namespace std;
-
-// Define a struct
-struct SensorData {
-    double voltage{0.0};   // Default initialization
-    int id{0};
-    char status{'N'};      // 'N' = normal, 'E' = error
-    string label{"Unknown"};
-
-    // Member function
-    void print() const { // Const class objects and const member functions
-        cout << "Sensor " << id 
-             << " [" << label << "] "
-             << "Voltage: " << voltage 
-             << " Status: " << status << endl;
-    }
-};
-
-// Function that accepts struct by reference
-void updateVoltage(SensorData &data, double newV) {
-    data.voltage = newV;
-}
-
-// Function returning a temporary struct
-SensorData makeSensor(int id, double v, const string &label) {
-    return {v, id, 'N', label};
-}
-
-int main() {
-    // Initialization using braces
-    SensorData s1{3.3, 1, 'N', "Temperature"};
-    s1.print();
-
-    // Pointer access
-    SensorData *ptr = &s1;
-    ptr->status = 'E';
-    ptr->print();
-
-    // Passing by reference
-    updateVoltage(s1, 4.8);
-    s1.print();
-
-    // Returning temporary struct
-    SensorData s2 = makeSensor(2, 5.0, "Pressure");
-    s2.print();
-
-    cout << "Size of struct = " << sizeof(SensorData) << " bytes" << endl;
-    return 0;
-}
-```
-
 ### 18.3. Class template
-- a **class template** is a template definition for instantiating class types (structs, classes, or unions). Class template argument deduction (CTAD) is a C++17 feature that allows the compiler to deduce the template type arguments from an initializer.
+- a **class template** is a template definition for instantiating class types (structs, classes, or unions). Class template argument deduction (CTAD) is a C++17 feature that allows the compiler to deduce the template type arguments from an initializer.s
 - Using class template in a function:
 - e.g.
 ```cpp
@@ -1874,47 +1011,47 @@ int main() {
 ```
 
 ### 19.23. Friend non-member functions
-- **A friend declaration** (using the `friend` keyword) can be used to tell the compiler that some other class or function is now a friend. In C++, a friend is a class or function (member or non-member) that has been granted full access to the private and protected members of another class. In this way, a class can selectively give other classes or functions full access to their members without impacting anything else.
+  - **A friend declaration** (using the `friend` keyword) can be used to tell the compiler that some other class or function is now a friend. In C++, a friend is a class or function (member or non-member) that has been granted full access to the private and protected members of another class. In this way, a class can selectively give other classes or functions full access to their members without impacting anything else.
 
-- **A friend function** is a function (member or non-member) that can access the private and protected members of a class as though it were a member of that class. In all other regards, the friend function is a normal function. 
-```cpp
-#include <iostream>
+  - **A friend function** is a function (member or non-member) that can access the private and protected members of a class as though it were a member of that class. In all other regards, the friend function is a normal function. 
+  ```cpp
+  #include <iostream>
 
-class Accumulator
-{
-private:
-    int m_value { 0 };
+  class Accumulator
+  {
+  private:
+      int m_value { 0 };
 
-public:
-    void add(int value) { m_value += value; }
+  public:
+      void add(int value) { m_value += value; }
 
-    // Here is the friend declaration that makes non-member function void print(const Accumulator& accumulator) a friend of Accumulator
-	// member function but it have friend keyword, it is instead treated as a non-member function
-    friend void print(const Accumulator& accumulator);
-};
+      // Here is the friend declaration that makes non-member function void print(const Accumulator& accumulator) a friend of Accumulator
+  	// member function but it have friend keyword, it is instead treated as a non-member function
+      friend void print(const Accumulator& accumulator);
+  };
 
-// non-member function
-void print(const Accumulator& accumulator)
-{
-    // Because print() is a friend of Accumulator
-    // it can access the private members of Accumulator
-    std::cout << accumulator.m_value;
-}
+  // non-member function
+  void print(const Accumulator& accumulator)
+  {
+      // Because print() is a friend of Accumulator
+      // it can access the private members of Accumulator
+      std::cout << accumulator.m_value;
+  }
 
-int main()
-{
-    Accumulator acc{};
-    acc.add(5); // add 5 to the accumulator
+  int main()
+  {
+      Accumulator acc{};
+      acc.add(5); // add 5 to the accumulator
 
-    print(acc); // call the print() non-member function
+      print(acc); // call the print() non-member function
 
-    return 0;
-}
-```
+      return 0;
+  }
+  ```
 
-- We can also define a friend non-member inside a class.
-- Prefer non-friend functions to friend functions
-- **Multiple friends:** A function can be a friend of more than one class at the same time. ( Class forward declarations serve the same role as function forward declarations)
+  - We can also define a friend non-member inside a class.
+  - Prefer non-friend functions to friend functions
+  - **Multiple friends:** A function can be a friend of more than one class at the same time. ( Class forward declarations serve the same role as function forward declarations)
 
 ### 19.24. Friend classes and friend member functions
 - **A friend class** is a class that can access the private and protected members of another class.
@@ -2072,8 +1209,6 @@ int main()
 
 ## 20. Inheritance 
 ### 20.1. Object Relationships
-- Learned about some different kinds of relationships between two objects.
-
 - The process of building complex objects from simpler ones is called **object composition**.
 - There are two types of object composition: `composition`, and `aggregation`.
 - **Composition** exists when a member of a class has a part-of relationship with the class. In a composition relationship, the class manages the existence of the members. 
@@ -2151,8 +1286,8 @@ public:
 - `C++ constructs` derived classes in phases, starting with the most-base class (at the top of the inheritance tree) and finishing with the most-child class (at the bottom of the inheritance tree).
 
 ### 20.3. Constructors and initialization of derived classes
-  - `Constructors`: the derived class constructor is responsible for determining which base class constructor is called. If no base class constructor is specified, the default base class constructor will be used. In that case, if no default base class constructor can be found (or created by default), the compiler will display an error.
-  - `Destructors:` When a derived class is destroyed, each destructor is called in the reverse order of construction.
+  - `Constructors`: the `derived class constructor` is responsible for determining which `base class constructor` is called. If no base class constructor is specified, the default base class constructor will be used.
+  - `Destructors:` When a derived class is destroyed, each destructor is called in the `reverse order of construction`.
   - In more detail:
     - Memory for the derived class is set aside (enough for both the base and derived portions).
     - The appropriate derived class constructor is called.
@@ -2160,6 +1295,7 @@ public:
     - The initialization list of the derived class initializes members of the derived class.
     - The body of the derived class constructor executes.
     - Control is returned to the caller.
+  
 ### 20.4. Inheritance and access specifiers
   - If we do not choose an inheritance type, C++ defaults to **private inheritance**
   - `private-inaccessible` does not affect the way that the derived class accesses members inherited from its parent! It only affects the code trying to access those members through the derived class.
@@ -2273,8 +1409,40 @@ int main() {
 }
 ```
 
-### 20.6. Hiding inherited functionality
-- **Changing an inherited member’s access level**: we can change an inherited member’s access specifier in the derived class, by using a using declaration to identify the (scoped) base class member that is having its access changed in the derived class, under the new access specifier.
+### 20.6. Hiding Inherited Functionality
+- **Changing an inherited member's access level:** A derived class can change the access level of an inherited member by using a `using` declaration under a different access specifier. The member keeps its original behavior, but its accessibility is changed within the derived class.
+- This technique is commonly used to:
+  - Expose a protected base-class member as public.
+  - Restrict a public base-class member to protected or private access.
+- e.g.
+    ```cpp
+    class Base
+    {
+    public:
+        void print() {}
+    protected:
+        int m_value {};
+    };
+
+    class Derived : public Base
+    {
+    private:
+        using Base::print; // Base::print becomes private in Derived
+
+    public:
+        using Base::m_value; // Base::m_value becomes public in Derived
+    };
+
+    int main()
+    {
+        Derived d{};
+
+        // d.print(); // error: print() is private in Derived
+
+        d.m_value = 5; // okay: m_value is public in Derived
+        return 0;
+    }
+    ```
 - e.g.
 ```cpp
 #include <iostream>
