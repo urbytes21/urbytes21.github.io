@@ -45,18 +45,48 @@ Type conversions
 
 ### 1.1 Implicit
 **Implicit type conversion** is performed `automatically` by the compiler when an expression of some type is supplied in a context where some other type is expected.
-- A **numeric promotion** is the conversion of certain smaller numeric types to larger numeric types (typically `int` or `double`). It guarantees to preserve the value being converted.
-- A **numeric conversion** is a conversion between arithmetic types that is not a numeric promotion. Numeric conversions may lose data or precision.
+- A **numeric promotion** converts `smaller numeric types` to `larger numeric types` (typically `int` or `double`). It guarantees to preserve the value being converted.
+- A **numeric conversion** is any arithmetic type conversion that is not a numeric promotion. Numeric conversions may lose data or precision.
+    ```cpp
+    /// @brief Numeric promotion: 
+    char c = 100;     // char
+    int i = c;        // char -> int   
+
+    /// @brief Numeric conversion: 
+    double d = 3.14;
+    int x = d;        // double -> int
+    ```
 <br>
 
 ### 1.2 Explicit
-**Explicit type conversion** is requested directly by the programmer.
+**Explicit type conversion** is requested directly by the programmer
 C++ supports five cast operators:
-  - static_cast
-  - dynamic_cast
-  - const_cast
-  - reinterpret_cast
-  - C-style cast
+  - `static_cast`: used for well-defined conversions between related types
+  - `dynamic_cast`: used for safe downcasting in polymorphic class hierarchies
+  - `const_cast`: used to add or remove `const`
+  - `reinterpret_cast`: used for low-level reinterpretation of bits or addresses
+  - C-style cast: inherited from C
+    ```cpp
+    /// @brief static_cast
+    double d = 3.14;
+    int i = static_cast<int>(d);
+
+    /// @brief dynamic_cast
+    Base* b = new Derived;
+    Derived* p = dynamic_cast<Derived*>(b);
+
+    /// @brief const_cast
+    const int x = 10;
+    int* px = const_cast<int*>(&x);
+
+    /// @brief reinterpret_cast
+    int x = 65;
+    char* p = reinterpret_cast<char*>(&x);
+
+    /// @brief C-style cast
+    double d = 3.14;
+    int i = (int)d;
+    ```
 
 ---
 ## 2. Type Aliases
