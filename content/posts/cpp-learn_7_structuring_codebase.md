@@ -1,30 +1,43 @@
+---
+author: "Phong Nguyen"
+title: "C++ - Chapter 7: Structuring Codebase"
+date: "2026-06-13"
+description: "C++ Notes"
+tags: ["cpp"]   #tags search
+FAcategories: ["syntax"]    #The category of the post, similar to tags but usually for broader classification.
+FAseries: ["Themes Guide"]    #indicates that this post is part of a series of related posts
+aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
+ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
+TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
+weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+---
 # Structuring Codebase
 
 ## 1. Scope, Storage Duration
 A variable's **storage duration** determines when it is created and destroyed.
 
-#### Automatic Storage Duration
+### 1.1. Automatic Storage Duration
 Variables are created when execution reaches their definition and destroyed when their enclosing block exits.
 Includes:
 - Local variables
 - Function parameters
 
-#### Static Storage Duration
+### 1.2. Static Storage Duration
 Variables are created when the program begins and destroyed when the program ends.
 Includes:
 - Global variables
 - Namespace variables
 - Static local variables
 
-#### Dynamic Storage Duration
+### 1.3. Dynamic Storage Duration
 Variables are created and destroyed under programmer control.
 Includes:
 - Dynamically allocated variables (`new`, `delete`)
 
-#### Thread Storage Duration
+### 1.3. Thread Storage Duration
 Each thread has its own instance of the variable.
 
-#### Storage Class Specifiers
+### 1.4. Storage Class Specifiers
 | Specifier | Meaning |
 |------------|----------|
 | `extern` | Declares a name with external linkage |
@@ -34,13 +47,11 @@ Each thread has its own instance of the variable.
 | `auto` | Type deduction (since C++11) |
 | `register` | Deprecated in C++17 |
 
-#### Translation Units
+### 1.5. Translation Units
 A **translation unit** consists of:
 - One source file (`.cpp`)
 - Plus all headers included directly or indirectly through `#include`
-Example:
-
-```text
+```cpp
 main.cpp
    |
    +-- config.h
@@ -57,9 +68,8 @@ main.cpp
 | config.h          |
 | math.h            |
 +-------------------+
+/// After preprocessing, the compiler sees a single expanded source file, which is called a translation unit.
 ```
-
-After preprocessing, the compiler sees a single expanded source file, which is called a translation unit.
 
 ---
 ## 2. Linkage
@@ -67,6 +77,7 @@ After preprocessing, the compiler sees a single expanded source file, which is c
 - An identifier with **no linkage** means another declaration of the same identifier refers to a unique entity. 
   - Local variables
   - Program-defined type identifiers (such as enums and classes) declared inside a block
+<br>
 
 ### 2.1. Internal Linkage
 - An identifier with **internal linkage** can only be accessed within the translation unit (source file .c/.cpp) in which it is declared.
@@ -75,7 +86,6 @@ After preprocessing, the compiler sees a single expanded source file, which is c
     - const global variables
     - unnamed namespaces and anything defined within them
 - Unlike C++, in C, `const` does not imply internal linkage.
-
 <br>
 
 - `static` <global_variable>: make the global variable  to internal linkage
@@ -83,8 +93,6 @@ After preprocessing, the compiler sees a single expanded source file, which is c
 - `static` <const/constexpr local_varialbe>: used to avoid expensive local object initialization each time a function is called because it inits once time.
 
 - Internal linkage for `const global variables` can change to `external` with the keyword `extern`. e.g. `extern const PI = 3.14;`
-
-- e.g.
     ```cpp
     // a.cpp ============================================================
     #include <iostream>
@@ -110,6 +118,7 @@ After preprocessing, the compiler sees a single expanded source file, which is c
         return 0;
     }
     ```
+<br>
 
 ### 2.2. External linkage
 - An identifier with **external linkage** can be accessed from multiple translation units.
@@ -127,7 +136,6 @@ After preprocessing, the compiler sees a single expanded source file, which is c
   - To give a const global variable external linkage, use extern.
 
 - To access a global variable defined in another source file, use an `extern` declaration without an initializer.
-- e.g.
     ```cpp
     // a.cpp ============================================================
     #include <iostream>
@@ -218,60 +226,57 @@ After preprocessing, the compiler sees a single expanded source file, which is c
   - **Downsides**:
     - Changing anything in the header file requires recompiling files including the header.
     - Each translation unit including the header gets its own copy of the variable.
-
 <br>
 
 ### 4.3. Global Constants As External Variables 
-    ```cpp
-    // constants.h:============================================================
-    #ifndef CONSTANTS_H
-    #define CONSTANTS_H
+```cpp
+// constants.h:============================================================
+#ifndef CONSTANTS_H
+#define CONSTANTS_H
 
-    namespace constants
-    {
-        // Since the actual variables are inside a namespace, the forward declarations need to be inside a namespace as well
-        // We can't forward declare variables as constexpr, but we can forward declare them as (runtime) const
-        extern const double pi;
-    }
+namespace constants
+{
+    // Since the actual variables are inside a namespace, the forward declarations need to be inside a namespace as well
+    // We can't forward declare variables as constexpr, but we can forward declare them as (runtime) const
+    extern const double pi;
+}
 
-    #endif
+#endif
 
-    // constants.cpp:============================================================
-    #include "constants.h"
+// constants.cpp:============================================================
+#include "constants.h"
 
-    namespace constants
-    {
-        extern constexpr double pi { 3.14159 }; /// Use extern to ensure these have external linkage
-    }
+namespace constants
+{
+    extern constexpr double pi { 3.14159 }; /// Use extern to ensure these have external linkage
+}
 
-    // main.cpp::============================================================
-    #include "constants.h" // include all the forward declarations
-    ```
+// main.cpp::============================================================
+#include "constants.h" // include all the forward declarations
+```
 
-- **Advantages**:
+**Advantages**:
   - Works prior to C++16.
   - Only one copy of each variable is required.
   - Only requires recompilation of one file if the value of a constant changes.
-- **Downsides**:
+
+**Downsides**:
   - Forward declarations and variable definitions are in separate files, and must be kept in sync.
   - Variables not usable in constant expressions outside of the file in which they are defined.
 
 ---
 ## 5. Forward Declaration
-Forward declaration allows us to tell the compiler about the existence of an identifier before actually defining the identifier.
+**Forward declaration** allows us to tell the compiler about the existence of an identifier before actually defining the identifier.
+```cpp
+returnType functionName(); ///< Forward Declaration
 
-    ```cpp
-    returnType functionName(); ///< Forward Declaration
-
-    /// @brief Function Definition
-    returnType functionName(){} 
-    ```
-
-<br>
+/// @brief Function Definition
+returnType functionName(){} 
+```
 
 ---
 ## 6. Namespace
-A **namespace** is a declarative region that provides a scope for identifiers (types, functions, variables, etc.) declared within it. It is used to organize code and avoid name conflicts between identifiers.
+**A namespace** is a declarative region that provides a scope for identifiers (types, functions, variables, etc.) declared within it. It is used to organize code and avoid name conflicts between identifiers.
 - Syntax:
     ```cpp
     namespace my_namespace{ const int pi = 100;}
@@ -282,61 +287,54 @@ A **namespace** is a declarative region that provides a scope for identifiers (t
     using namespace my_namespace;
     int pi_copy = pi; // without my_namespace::pi;
     ```
+<br>
 
-- **Namespace aliases** provide a shorter name for a namespace. `using namespace m_n = my_namespace;`
-- **Nested namespaces** allow namespaces to be declared inside other namespaces.
-- **Inline namespaces** (C++11) are commonly used for versioning and allow members of a nested namespace to be accessed through the enclosing namespace.
-    ```cpp
-        namespace MyLibrary
-        {
-            inline namespace v2
-            {
-                void print()
-                {
-                    std::cout << "Version 2\n";
-                }
-            }
+**Namespace aliases** provide a shorter name for a namespace. `using namespace m_n = my_namespace;`
 
-            namespace v1
-            {
-                void print()
-                {
-                    std::cout << "Version 1\n";
-                }
-            }
+**Nested namespaces** allow namespaces to be declared inside other namespaces.
+
+**Inline namespaces** (C++11) are commonly used for versioning and allow members of a nested namespace to be accessed through the enclosing namespace.
+```cpp
+    namespace MyLibrary {
+        inline namespace v2 {
+            void print() {}
         }
-        MyLibrary::print();      // Calls v2::print() , access via MyLibrary namespace by using inline
-        MyLibrary::v1::print();  // Calls v1::print()
-        MyLibrary::v2::print();  // Calls v2::print()
-    ``` 
 
-- **Anonymous (unnamed) namespaces** provide internal linkage for their members within a translation unit.
+        namespace v1 {
+            void print() {}
+        }
+    }
+    MyLibrary::print();      // Calls v2::print() , access via MyLibrary namespace by using inline
+    MyLibrary::v1::print();  // Calls v1::print()
+    MyLibrary::v2::print();  // Calls v2::print()
+``` 
+
+**Anonymous (unnamed) namespaces** provide internal linkage for their members within a translation unit.
 
 ---
 ## 7. Preprocessor
 The `preprocessor` is a process that runs on the code before it is compiled.
+```cpp
+#include <iostream>     // insert file contents
+#define NAME "Alex"     // replace NAME -> "Alex"
 
-    ```cpp
-    #include <iostream>     // insert file contents
-    #define NAME "Alex"     // replace NAME -> "Alex"
-
-    #ifdef NAME_DEFINED     // only compile if defined
-    std::cout << NAME;
-    #endif
-    ```
+#ifdef NAME_DEFINED     // only compile if defined
+std::cout << NAME;
+#endif
+```
 
 ---
 ## 8. Headers / CPP Files
 **Header files** are files designed to propagate declarations to code files. 
 `Header guards` prevent the contents of a header from being included more than once into a given code file. 
-  - For cross-platform library code, `#ifndef` is safest.
-  - For modern projects, `#pragma once` is simpler and safe.
+- For cross-platform library code, `#ifndef` is safest.
+- For modern projects, `#pragma once` is simpler and safe.
 
-    ```cpp
-    #include <iostream>     // search system only 
-    #include "my_header.h"  // search local first, then system
+  ```cpp
+  #include <iostream>     // search system only 
+  #include "my_header.h"  // search local first, then system
 
-    /// @brief Add include directories with -I
-    // g++ -o main -I./source/includes -I/home/abc/moreHeaders main.cpp
-    ```
+  /// @brief Add include directories with -I
+  // g++ -o main -I./source/includes -I/home/abc/moreHeaders main.cpp
+  ```
 ----
