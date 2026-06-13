@@ -15,36 +15,34 @@ weight: 1    # The order in which the post appears in a list of posts. Lower num
 ## 1. Introduction
 C++ was developed as an extension to C. It adds many few features to the C language, and tis perhaps best through of as a superset of C. 
 
-**Step 1:** Define the problem that you would like to solve
+#### How To Program 
+**Step 1:** Define the problem
 - I want to write a program that will ...
 
-**Step 2:** Determine how you are going to solve the problem
+**Step 2:** Determine how to solve the problem
 Determine how we are going to solve the problem you came up with in step 1.
 - They are straightforward (not overly complicated or confusing).
 
 **Step 3:** Write the program
-```c++
-#include <iostream>
+  ```c++
+  #include <iostream>
+  int main() {
+      std::cout << "Hello World";
+      return 0;
+  }
+  ```
 
-int main()
-{
-    std::cout << "Here is some text.";
-    return 0;
-}
-```
-
-**Step 4:** Compiling your source code
-- We use a C++ compiler: MinGW/GCC, Clang, ... for many different OS.
-- The C++ compiler sequentially goes through each source code file and does two important tasks:
-  - checks your C++ code to make sure it **follows the rules** of the C++ language.
-  - translates your C++ code into **machine language instructions**. These instructions are stored in an intermediate file called **an object file**.
+**Step 4:** Compiling the source code
+- Use a C++ compiler: MinGW/GCC, Clang, ... for many different OS.
+- The C++ compiler sequentially goes through each source code file:
+  - Checks the C++ code to make sure it **follows the rules** of the C++ language.
+  - Translates your C++ code into **machine language instructions**. These instructions are stored in an intermediate file called **an object file**.
 
 **Step 5:** Linking object files and libraries
-- After the compiler has successfully finished, another program called the linker kicks in: ar,ld, ...
+- After the compiler has successfully finished, another program called the **linker** kicks in: `ar`,`ld`, ...
 - Linking is to combine all the object files and produce the desired output file (.exe, .elf, .hex ..)
 
 > NOTE: Building refer to the full process of converting source code files into an executable that can be run.
-> For complex project, build automation tools such as make, cmake are often used.
 
 **Steps 6 & 7:** Testing and Debugging
 
@@ -199,47 +197,34 @@ const uint8_t gamma_table[256] = {
 };
 ```
 
-
 ---
 ## 3. Setup Environment, IDE (Integrated Development Environment):
-We need to installing IDE or st that comes with a compiler that supports at least C++17: **GCC/G++7, Clang++ 8,...**
+Installing a compiler that supports at least C++17: **GCC/G++7, Clang++ 8,...**
 Some of the options typically does:
   - **Build:** compiles all modified code files in the project or workspace/solution, and then links the object files into an executable. If no code files have been modified since the last build, this option does nothing.
   - **Clean:** removes all cached objects and executables so the next time the project is built, all files will be recompiled and a new executable produced.
-  - **Rebuild:** does a “clean”, followed by a “build”.
-  - **Compile:** recompiles a single code file (regardless of whether it has been cached previously). This option does not invoke the linker or produce an executable.
-  - **Run/start:** executes the executable from a prior build. Some IDEs (e.g. Visual Studio) will invoke a “build” before doing a “run” to ensure you are running the latest version of your code. Otherwise (e.g. Code::Blocks) will just execute the prior executable.
+  - **Rebuild:** does a "clean" -> "build"
+  - **Compile:** recompile a single code file (regardless of whether it has been cached previously). This option does not invoke the linker or produce an executable.
+  - **Run/Start:** executes the executable from a prior build
 
 - **Examples:**
-  1. **Create main.c**
-  ```
+  ```cpp
+  // main.cpp
   #include <iostream>
-  #include <limits>
 
   int main(){
-  	std::cout << "Hello world";
-  	std::cin.get(); // get one more char from the user
+  	std::cout << "Hello World";
   	return 0;	
   }
-
   ```
-  2. **Run following commands**
     
   ```bash
   $ ls
   main.cpp
-
   $ g++ --version
-  g++ (MinGW.org GCC-6.3.0-1) 6.3.0
-  Copyright (C) 2016 Free Software Foundation, Inc.
-  This is free software; see the source for copying conditions.  There is NO
-  warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-
   $ g++ main.cpp -o main.o
-
   $ g++ main.o -o main.exe
-
-  $ main.exe
+  $ ./main.exe
   Hello world
   ```
 
@@ -264,62 +249,7 @@ Some of the options typically does:
 - For gcc/g++/clang, the `-std=c++17` option is used to set the language standard.
 
 ---
-## 5. Notes
-### 5.1. printf/snprintf Cheat Sheet {C / C++}
-#### Integer
-
-| Data type                         | Specifier |
-| --------------------------------- | --------- |    
-| `int8_t` / `signed char`          | `%hhd`    |
-| `uint8_t` / `unsigned char`       | `%hhu`    |
-| `int16_t` / `short`               | `%hd`     |
-| `uint16_t` / `unsigned short`     | `%hu`     |
-| `int32_t` / `long`                | `%ld`     |
-| `uint32_t` / `unsigned long`      | `%lu`     |
-| `int64_t` / `long long`           | `%lld`    |
-| `uint64_t` / `unsigned long long` | `%llu`    |
-
-#### Floating point
-
-| Data type     | Specifier |
-| ------------- | --------- |
-| `float`       | `%f`      |
-| `double`      | `%f`      |
-| `long double` | `%Lf`     |
-
-- `%e` -> scientific notation  
-- `%g` -> auto select `%f` or `%e`
-
-#### Char / String
-
-| Data type          | Specifier | Notes                  |
-| ------------------ | --------- | ---------------------- |
-| `char`             | `%c`      | single character       |
-| `char*` / `String` | `%s`      | null-terminated string |
-
-#### Pointer / Address
-
-| Data type | Specifier | Notes               |
-| --------- | --------- | ------------------- |
-| `void*`   | `%p`      | memory address, hex |
-
-#### Hex / Octal / Binary
-
-| Data type    | Specifier   | Notes       |
-| ------------ | ----------- | ----------- |
-| unsigned int | `%x` / `%X` | hexadecimal |
-| unsigned int | `%o`        | octal       |
-| Arduino only | `%b`        | binary      |
-
-#### Flags, Width, Precision
-
-- `%-10d` -> left-justify, width 10  
-- `%010d` -> pad with zeros, width 10  
-- `%.2f` -> 2 decimal digits  
-- `%*d` -> dynamic width  
-
----
-### 5.2. Command Line
+## 5. Command Line
 - Command line arguments are optional string arguments that are passed by the operating system to the program when it launch.
 - Passing command line arguments: we simply list the command line arguments right after the executable name.
 - Using command line arguments: by using different form of `main()`: `main(int argc, char* argv[])` / `main(int argc, char** argv)`
@@ -332,7 +262,8 @@ Some of the options typically does:
     ./executable_app "hello world" 1 2 3
     ```
 
-### 5.3. Performance
+---
+## 6. Performance
 - **Things that can impact program performance:**
   - CPU speed
   - Memory usage
