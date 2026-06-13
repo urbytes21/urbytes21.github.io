@@ -331,3 +331,11 @@ std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 - `sv` suffix is a `std::string_view` literally
 - Modify a std::string is likely to invalidate all std::string_view that view into that.
 - It may or may not be null-terminated.
+
+---
+## 5. wstring
+**std::wstring** is a string class that stores wide characters (`wchar_t`) instead of regular characters (`char`).
+```cpp
+std::wstring ws = L"Hello";
+ws += L" World";
+```
