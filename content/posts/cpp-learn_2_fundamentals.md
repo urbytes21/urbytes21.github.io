@@ -12,7 +12,7 @@ TocOpen: true    # Controls whether the TOC is expanded when the post is loaded.
 weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
 
-C++ Basic Concepts
+#### Basic Concepts
 - `Data` is any information processed or stored by a computer.
 - A `Value` is a specific piece of data (e.g. `42`, `'A'`, `3.14`).
 - An `Object` is a region of storage (memory) with a type and a value.
@@ -37,13 +37,11 @@ new T;
 Performed when an object is created **without any initializer**.
   - **Built-in types:** uninitialized
   - **Class types:** default constructor is called
-
 <br>
 
 ### 1.2. Value Initialization
 ```cpp
 int a{};
-
 T();
 new T();
 T object{};
@@ -58,14 +56,12 @@ Class::Class() : member{} {}
 Performed when an object is created with an **empty initializer**.
   - **Built-in types**: zero-initialized
   - **Class types**: default constructor is called
-
 <br>
 
 ### 1.3 Direct Initialization
 ```cpp
 T object(arg);
 T object(arg1, arg2);
-
 T object{arg};          // since C++11
 new T(args...);
 static_cast<T>(other);
@@ -76,7 +72,6 @@ Class::Class() : member(args...) {}
 ```
 
 Initializes an object using **explicit constructor arguments**.
-
 <br>
 
 ### 1.4 Copy Initialization
@@ -91,6 +86,7 @@ catch (T object);
 T array[N] = { /* values */ };
 ```
 Initializes an object **from another object or expression**.
+<br>
 
 ### 1.5 List Initialization (since C++11)
 ```cpp
@@ -105,14 +101,12 @@ T object = {arg1, arg2};
 return {arg1, arg2};
 function({arg1, arg2});
 
-
 /// @brief Designated Initializers (since C++20)
 T object{ .des1 = arg1, .des2 = arg2 };
 T object = { .des1 = arg1, .des2 = arg2 };
 ```
 
 Initializes objects using **brace-enclosed initializer lists { }**.
-
 <br>
 
 ### 1.6 Aggregate Initialization
@@ -125,15 +119,13 @@ T object = { .des1 = arg1, .des2 = arg2 };
 T object{ .des1 = arg1, .des2 = arg2 };
 ```
 Initializes **aggregate types** (no user-defined constructors).
+<br>
 
 ---
-## 2. TBD
-
----
-## 3. Fundamental Data Types
+## 2. Fundamental Data Types
 Memory can only store bits. `Data type` help compiler and CPU take care of encoding the value into the sequence of bits.
-    - Fundamental Data Types
-    - Compound Data Types
+  - Fundamental Data Types
+  - Compound Data Types
 
 ### 3.1 Primitive Type
 | Types                                                              | Category             | Meaning                                          | Example |
@@ -146,8 +138,6 @@ Memory can only store bits. `Data type` help compiler and CPU take care of encod
 | void                                                               | Void                 | no type                                          | n/a     |
 
 - `sizeof` used to get the size of a type in bytes. (pointer has 4 or 8 bytes based on the arch)
-- `signed integers` can hold both positive and negative numbers (and 0). 
-- `unsigned integers` can only hold non-negative whole numbers.
 - `fixed-width integers` are the  set of integer types that are guaranteed to be the same size on any architecture **`#include <cstdint>`**
   - `fast integers`: guarantee at least # bits, but pick the type that the CPU can process fastest (even if it uses more memory).
   - `least integers`: guarantee at least # bits, but pick the type that uses the least memory (even if it’s slower).
@@ -155,13 +145,12 @@ Memory can only store bits. `Data type` help compiler and CPU take care of encod
 - `scientific notation e/E` used to present the times 10 to the power of the equation. e.g.  **(e.g. 5.9722 x 10²⁴ -> 5.9722e24)**
 - `Inf` represents infinity. Inf is signed, and can be positive (+Inf) or negative (-Inf). (5/0)
 - `NaN` stands for “Not a Number”. (mathematically invalid)
-
 <br>
 
-### 3.2. Chars
+### 3.2. Char And String
 - A `char` variable are interpreted as an `ASCII character`.
 - `'t'`: Text between single quotes is treated as a char literal, which represents a single character.
-- `"text"`: Text between double quotes (e.g. “Hello, world!”) is treated as a C-style string literal, which can contain multiple characters.
+- `"text"`: Text between double quotes (e.g. "Hello, world") is treated as a C-style string literal, which can contain multiple characters.
 
 ---
 ## 4. Constant
@@ -171,25 +160,22 @@ Memory can only store bits. `Data type` help compiler and CPU take care of encod
     - Macros with substitution text
     - Enumerated constant
   - **Literal** are constant values that are not associated with an identifier.Literals are values that are inserted directly into the code.
-
 <br>
 
 ### 4.1. Named constants
 ```cpp
 const double gravity = 9.8; ///< Const variable
-
 #define MY_NAME "Phong"  ///< Object-like macros with substitution text
-
 enum Color {
     RED,    // Assigned 0
     GREEN,  // Assigned 1
     BLUE = 5, // Manually assigned 5
     YELLOW  // Assigned 6 (5 + 1)
-};///< Enumerated constant
+}; ///< Enumerated constant
 ```
+<br>
 
 ### 4.2. Literals
-
 ```cpp
 return 5;                       ///< 5 is an integer literal -> type: int
 bool myNameIsAlex { true };     ///< true is a boolean literal -> type: bool
@@ -201,34 +187,32 @@ cout << 5.0f << '\n';           ///< 5.0f is type float
 
 - `Type of a literal` is deduced from the literal's value.
 - `Literal suffixes` used to explicitly declare the type for a literal.
-
 <br>
 
-### 4.3.  Numeral systems (decimal, binary, hexadecimal, and octal)
+### 4.3. Numeral Systems (decimal, binary, hexadecimal, and octal)
 - Numeral system literals:
-    - Decimal (no prefix, 42)
-    - Binary (0b101010) `b`
-    - Hexadecimal (0x2A) `x`
-    - Octal (052) — all represent the same value.
+  - Decimal (no prefix, 42)
+  - Binary (0b101010) `b`
+  - Hexadecimal (0x2A) `x`
+  - Octal (052) - all represent the same value.
 - Can change the output format via use of the `std::dec, std::oct, and std::hex` I/O manipulators:
 - Can define a `std::bitset` variable and tell `std::bitset` how many bits we want to store.
-```cpp
-    int bin{};          // assume 16-bit int
-    bin = 0x0001;       // assign binary 0000 0000 0000 0001 to the variable
-    bin = 0b1;          // assign binary 0000 0000 0000 0001 to the variable
-    bin = 0b11;         // assign binary 0000 0000 0000 0011 to the variable
+  ```cpp
+      int bin{};          // assume 16-bit int
+      bin = 0x0001;       // assign binary 0000 0000 0000 0001 to the variable
+      bin = 0b1;          // assign binary 0000 0000 0000 0001 to the variable
+      bin = 0b11;         // assign binary 0000 0000 0000 0011 to the variable
 
-    cout << std::bitset<4>{ 0b1010 } << '\n'; // create a temporary std::bitset and print it
+      cout << std::bitset<4>{ 0b1010 } << '\n'; // create a temporary std::bitset and print it
 
-    // C++14: quotation mark (‘) as a digit separator
-    int bin { 0b1011'0010 };        // assign binary 1011 0010 to the variable
-    long value { 2'132'673'462 };   // much easier to read than 2132673462
-```
-
+      // C++14: quotation mark (‘) as a digit separator
+      int bin { 0b1011'0010 };        // assign binary 1011 0010 to the variable
+      long value { 2'132'673'462 };   // much easier to read than 2132673462
+  ```
 <br>
 
 ### 4.4.  Constant Expression
-- `Constant expressions` is an expressions whose values can be fully determined at **compile time**.
+- `Constant expressions` is the expressions whose values can be fully determined at **compile time**.
 - `constexpr` is used to declare compile-time constants
 - Benefits:
   - Safer code
@@ -238,24 +222,19 @@ cout << 5.0f << '\n';           ///< 5.0f is type float
 - `constexpr` function is is a function that is allowed to be called in a constant expression, can be evaluated at compile time or runtime.
 - `consteval` function is a function that must evaluate at compile-time.
 
-```cpp
-constexpr int square(int x) {
-    return x * x;
-}
+  ```cpp
+  constexpr int square(int x) { return x * x; }
+  consteval int cube(int x) { return x * x * x; }
 
-consteval int cube(int x) {
-    return x * x * x;
-}
+  constexpr int a = square(5); // compile-time
+  int b = square(5);           // runtime allowed
 
-constexpr int a = square(5); // compile-time
-int b = square(5);           // runtime allowed
-
-constexpr int c = cube(5);   // OK
-// int d = cube(5);          // Error if not compile-time
-```
+  constexpr int c = cube(5);   // OK
+  // int d = cube(5);          // Error if not compile-time
+  ```
 
 ---
-## 5. Operators & Bit Manipulation
+## 5. Operators And Bit Manipulation
 ### 5.1. Operators
 - Refer : https://www.learncpp.com/cpp-tutorial/operator-precedence-and-associativity/
 - `Increment/decrement`:
@@ -263,110 +242,136 @@ constexpr int c = cube(5);   // OK
   -  `x++`: copy x, then increment x, return the copy
 - `Comma`: 
   - `(x, y)`: Evaluate x then y, returns value of y
-  - avoid use this
 
 ### 5.2. Bit manipulation.
 - To define a set of bit flags, use `uint8/16/32`... or `std::bitset`
 - Refers: https://www.learncpp.com/cpp-tutorial/bit-flags-and-bit-manipulation-via-stdbitset/
+  ```cpp
+  // For unsigned integers (when no overflow occurs):
+  // x << n == x * 2ⁿ
+  // x >> n == x / 2ⁿ
+    uint8_t x = 5;          // 0b00000101
+    x << 1;                 // 0b00001010 = 10
+    x << 2;                 // 0b00010100 = 20
+
+    uint8_t x = 20;         // 0b00010100
+    x >> 1;                 // 0b00001010 = 10
+    x >> 2;                 // 0b00000101 = 5
+  ```
 
 ---
 ## 6. Control Flows
 ### 6.1. Constexpr if statement (C++17)
 - Condition will be evaluated at runtime.
-- e.g. 
-```cpp
-int main()
-{
-	constexpr double gravity{ 9.8 };
-
-	if constexpr (gravity == 9.8) // now using constexpr if
-		std::cout << "Gravity is normal.\n";
-	else
-		std::cout << "We are not on Earth.\n";
-
-	return 0;
-}
-```
-
+  ```cpp
+  void main() {
+    constexpr double gravity{ 9.8 };
+    if constexpr (gravity == 9.8){ // now using constexpr if
+      std::cout << "Gravity is normal.\n";
+    } else {
+      std::cout << "We are not on Earth.\n";
+    }
+  }
+  ```
 <br>
 
 ### 6.2. Switch fallthrough and scoping
 - The `[[fallthrough]]` attribute modifies a null statement to indicate that fallthrough is intentional (and no warnings should be triggered).
 - Initialization is not allowed before case labels because control flow in a switch may jump over the initializer, leaving the variable uninitialized.
 - Declarations without an initializer are allowed before case labels because they only reserve space for the variable in the function’s stack frame (decided at compile time). No runtime initialization code is generated, so nothing can be “skipped” by jumping to a case.
-- e.g.
-```cpp
-int main() {
-    int x = 2;
-
-    switch (x) {
-        int a;       //  allowed (no initializer, just reserves space)
-        // int b{5}; //  not allowed (initializer may be skipped)
-
-    case 1:
-        a = 10; // safe: 'a' exists, we assign here
-        std::cout << "Case 1, a = " << a << '\n';
-        [[fallthrough]]; //  intentional fallthrough to case 2
-
-    case 2:
-        a = 20; // reassign
-        std::cout << "Case 2, a = " << a << '\n';
-        break;
-
-    default:
-        std::cout << "Default case\n";
-        break;
-    }
-
-    return 0;
-}
-```
-
+  ```cpp
+  void main() {
+      int x = 2;
+      switch (x) {
+          int a;       //  allowed (no initializer, just reserves space)
+          // int b{5}; //  not allowed (initializer may be skipped)
+      case 1:
+          a = 10; // safe: 'a' exists, we assign here
+          std::cout << "Case 1, a = " << a << '\n';
+          [[fallthrough]]; //  intentional fallthrough to case 2
+      case 2:
+          a = 20; // reassign
+          std::cout << "Case 2, a = " << a << '\n';
+          break;
+      default:
+          std::cout << "Default case\n";
+          break;
+      }
+  }
+  ```
 <br>
 
-### 6.3. Halts
-- Halts allow us to terminate our program.Only use a halt if there is no safe or reasonable way to return normally from the main function. If you haven’t disabled exceptions, prefer using exceptions for handling errors safely.
-- `std::exit` is called implicitly when main() returns, it does not clean up local variables in the current function or up the call stack.
-- `std::abort()` function causes your program to terminate abnormally. Abnormal termination means the program had some kind of unusual runtime error and the program couldn’t continue to run. 
-- `std::terminate()` function is typically used in conjunction with exceptions . By default, it calls `std::abort()`
-- e.g.
+
+---
+## 7. printf/snprintf
+`printf() `prints formatted output to the console or standard output.
+`snprintf()` formats output and stores it in a buffer while limiting the number of bytes written, helping prevent buffer overflows.
+
 ```cpp
-#include <iostream>
-#include <cstdlib>    // for std::exit, std::abort
-#include <exception>  // for std::terminate
+printf("data %d", value);
 
-void cleanup() {
-    std::cout << "Cleaning up...\n";
-}
-
-void riskyFunction(bool fatalError) {
-    if (fatalError) {
-        std::cout << "Fatal error occurred!\n";
-
-        // std::abort: abnormal termination, no cleanup
-        std::abort();
-
-        // Or: std::terminate(); // usually called when exception handling fails
-    }
-}
-
-int main() {
-    cleanup(); // local function call
-
-    // Example 1: return normally from main
-    std::cout << "Program running normally...\n";
-
-    // Example 2: using std::exit (implicit when main returns)
-    if (false) {
-        std::cout << "Exiting via std::exit...\n";
-        std::exit(0); // does not call destructors of locals in main()
-    }
-
-    // Example 3: risky code that might abort/terminate
-    riskyFunction(true);
-
-    // Example 4: normal end of main calls std::exit implicitly
-    std::cout << "Main returns normally.\n";
-    return 0; // std::exit(0) is called implicitly here
-}
+uint8_t buffer[100];
+sprintf((char*)buffer, "data %d", value);
+printf((char*)buffer);
 ```
+#### Integer
+
+| Data type                         | Specifier |
+| --------------------------------- | --------- |    
+| `int8_t` / `signed char`          | `%hhd`    |
+| `uint8_t` / `unsigned char`       | `%hhu`    |
+| `int16_t` / `short`               | `%hd`     |
+| `uint16_t` / `unsigned short`     | `%hu`     |
+| `int32_t` / `long`                | `%ld`     |
+| `uint32_t` / `unsigned long`      | `%lu`     |
+| `int64_t` / `long long`           | `%lld`    |
+| `uint64_t` / `unsigned long long` | `%llu`    |
+
+#### Floating point
+
+| Data type     | Specifier |
+| ------------- | --------- |
+| `float`       | `%f`      |
+| `double`      | `%f`      |
+| `long double` | `%Lf`     |
+
+- `%e` -> scientific notation  
+- `%g` -> auto select `%f` or `%e`
+
+#### Char / String
+
+| Data type          | Specifier | Notes                  |
+| ------------------ | --------- | ---------------------- |
+| `char`             | `%c`      | single character       |
+| `char*` / `String` | `%s`      | null-terminated string |
+
+#### Pointer / Address
+
+| Data type | Specifier | Notes               |
+| --------- | --------- | ------------------- |
+| `void*`   | `%p`      | memory address, hex |
+
+#### Hex / Octal / Binary
+
+| Data type    | Specifier   | Notes       |
+| ------------ | ----------- | ----------- |
+| unsigned int | `%x` / `%X` | hexadecimal |
+| unsigned int | `%o`        | octal       |
+| Arduino only | `%b`        | binary      |
+
+#### Flags, Width, Precision
+
+- `%-10d` -> left-justify, width 10  
+- `%010d` -> pad with zeros, width 10  
+- `%.2f` -> 2 decimal digits  
+- `%*d` -> dynamic width  
+---
+
+---
+## 8. Memory Functions
+The <cstring> header provides C-style memory and string manipulation functions.
+Common functions:
+- `memset`  : Fill a block of memory with the same byte value.
+- `memcpy`  : Copy a block of memory from source to destination.
+- `memmove` : Copy memory safely when source and destination overlap.
+- `memcmp`  : Compare two blocks of memory.

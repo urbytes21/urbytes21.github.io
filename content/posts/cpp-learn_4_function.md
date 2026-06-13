@@ -248,7 +248,7 @@ FuncPtr(10, 20);     // Preferred
 
 ---
 ## 6. Function Templates
-- The template system was designed to simplify the process of creating functions (or classes) that are able to work with different data types (that are compiled and executed).
+Function templates allow us to create generic functions that can operate on different data types without duplicating code.
 - `template types` are sometimes called generic types, and programming using templates is sometimes called generic programming.
 - `placeholder types` use for any parameter types, return types, or types used in the function body that we want to be specified later, by the user of the template.
 - `template parameter declaration` defines any template parameters that will be subsequently used.
