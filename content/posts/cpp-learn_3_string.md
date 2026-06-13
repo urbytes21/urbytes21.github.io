@@ -11,36 +11,32 @@ ShowToc: true    # Determines whether to display the Table of Contents (TOC) for
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
 weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
-# String
+# C++ String
 
 ## 1. C-Style String
-A C-Style string is any **null-terminated byte string**, where this is a sequence of nonzero bytes followed by a byte with zero (0) value (the terminating null character).
-- The terminating null character is represented as the character literal **'\0'**;
-- The length of an NTBS is the number of elements that precede the terminating null character. An empty NTBS has a length of zero.
-- The size of an NTBS is the size of the entire array, including the terminating null character.
+**A C-Style string** is any **null-terminated byte string (NTBS)**, where this is a sequence of nonzero bytes followed by a byte with zero (0) value (the terminating null character).
+- terminating null character: `'\0'`
+- length of an NTBS is the number of elements that precede the terminating null character. An empty NTBS has a length of zero.
+- size of an NTBS is the size of the entire array, including the terminating null character.
 - A single quotes `(')` are used to identify **character literals**.
 - A double quotes `('')` are used to identify **string literals**. String literals are stored in your program image, usually in a read-only section (.data),
-
 <br>
 
 ### 1.1. Create a String
 ```c
-// *1. Ptr
-char* strMessagePtr= "abc";
-// sizeof(strMessage) = 32 or 64 (ptr)
-strMessagePtr[0] = 1; // error, ptr to const
+/// @brief 1.Using pointer
+char* str1= "abc"; // sizeof(str1) = 32 or 64 (ptr)
+str1[0] = 1;       // error, ptr to const
 
-// *2. Arrays
-char strMessage[] = "abc";
-// sizeof(strMessage ) = 4 
-strMessage[1] = 'a'; // OK
+/// @brief 1.Using array
+char str2[] = "abc"; // sizeof(str2) = 4 
+str2[1] = 'a';       // OK
 ```
-- For `strMessage`, the memory for the array is allocated on the stack at runtime. The compiler initializes it from the string literal. At runtime, the program memory copies the string literal into the array 
-- For `strMessagePtr`, only the address of the string literal is held on the stack, and there is no copying of string literal.
-
+- For `str_1`, the memory for the array is allocated on the stack at runtime. The compiler initializes it from the string literal. At runtime, the program memory copies the string literal into the array 
+- For `str_2`, only the address of the string literal is held on the stack, and there is no copying of string literal.
 <br>
 
-### 1.2. Characters
+### 1.2. Character
 - Null: `\0`, `0x00`, `NULL`
 - Carriage Return And New Line: `\r\n`
 - Case switching: `'A' ^ ' '` & `'a' ^ ' '`
@@ -61,7 +57,6 @@ strMessage[1] = 'a'; // OK
     | Question mark   | `\?`         | Prints a question mark *(no longer relevant)*  |
     | Octal number    | `\{number}`  | Translates into char represented by octal      |
     | Hex number      | `\x{number}` | Translates into char represented by hex number |
-
 <br>
 
 ### 1.3. C String Libraries
@@ -70,66 +65,51 @@ strMessage[1] = 'a'; // OK
 - Comparing strings: `strcmp`, `strncmp`
 - Parsing strings: `strtok`, `strcspn`
 - Length: `strlen`
-- Examples:
-```cpp
-#include <stdio.h>
-#include <string.h>
+    ```c
+    #include <stdio.h>
+    #include <string.h>
 
-int main() {
-    // -------------------------------
-    // 1. Copying strings
-    // -------------------------------
-    char src[] = "Hello";
-    char dst[20];
+    void main() {
+        /// @brief Copying
+        char src[] = "Hello";
+        char dst[20];
+        strcpy(dst, src);           // copy full string
+        // dst = "Hello"
 
-    strcpy(dst, src);           // copy full string
-    // dst = "Hello"
+        strncpy(dst, "World", 3);   // copy only 3 chars
+        dst[3] = '\0';              // ensure null-termination
+        // dst = "Wor"
 
-    strncpy(dst, "World", 3);   // copy only 3 chars
-    dst[3] = '\0';              // ensure null-termination
-    // dst = "Wor"
+        /// @brief Concatenating strings
+        char text[20] = "Hi";
+        strcat(text, " there");     // append full string
+        // text = "Hi there"
 
-    // -------------------------------
-    // 2. Concatenating strings
-    // -------------------------------
-    char text[20] = "Hi";
-    strcat(text, " there");     // append full string
-    // text = "Hi there"
+        strncat(text, "!!!", 2);    // append only 2 chars
+        // text = "Hi there!!"
 
-    strncat(text, "!!!", 2);    // append only 2 chars
-    // text = "Hi there!!"
+        /// @brief Comparing strings
+        int r1 = strcmp("abc", "abc");   // r1 = 0  (equal)
+        int r2 = strcmp("abc", "abd");   // r2 < 0  (abc < abd)
+        int r3 = strncmp("abcdef", "abcxyz", 3); // r3 = 0 (first 3 chars equal)
 
-    // -------------------------------
-    // 3. Comparing strings
-    // -------------------------------
-    int r1 = strcmp("abc", "abc");   // r1 = 0  (equal)
-    int r2 = strcmp("abc", "abd");   // r2 < 0  (abc < abd)
-    int r3 = strncmp("abcdef", "abcxyz", 3); // r3 = 0 (first 3 chars equal)
+        /// @brief Parsing strings
+        char line[] = "A,B,C";
+        char* token = strtok(line, ",");  // first token: "A"
+        while (token != NULL) {
+            printf("token: %s\n", token);
+            token = strtok(NULL, ",");
+        }
 
-    // -------------------------------
-    // 4. Parsing strings
-    // -------------------------------
-    char line[] = "A,B,C";
-    char* token = strtok(line, ",");  // first token: "A"
-    while (token != NULL) {
-        printf("token: %s\n", token);
-        token = strtok(NULL, ",");
+        // strcspn: find first occurrence of any chars in reject set
+        char sample[] = "hello123world";
+        size_t pos = strcspn(sample, "0123456789");
+        // pos = 5 (first digit is at index 5)
+
+        /// @brief Length
+        size_t len = strlen("abc");  // len = 3
     }
-
-    // strcspn: find first occurrence of any chars in reject set
-    char sample[] = "hello123world";
-    size_t pos = strcspn(sample, "0123456789");
-    // pos = 5 (first digit is at index 5)
-
-    // -------------------------------
-    // 5. Length
-    // -------------------------------
-    size_t len = strlen("abc");  // len = 3
-
-    return 0;
-}
-```
-
+    ```
 <br>
 
 ### 1.4. String/Numbers Conversion
@@ -137,63 +117,54 @@ int main() {
 - String to Double: `atof()`
 - String to Double (with error checking): `strtod()`
 - String to Long (with base + error checking): `strtol()`
-- e.g.
-```c
-#include <stdio.h>
-#include <stdlib.h>   // atof, strtod, strtol
-#include <string.h>   // itoa (non-standard on some compilers)
+    ```c
+    #include <stdio.h>
+    #include <stdlib.h>   // atof, strtod, strtol
+    #include <string.h>   // itoa (non-standard on some compilers)
 
-int main() {
-    // -------------------------------
-    // 1. Integer to String (itoa)
-    // -------------------------------
-    char buf[32];
-    itoa(1234, buf, 10);   // convert integer to string in base 10
-    // buf = "1234"
+    void main() {
+        /// @brief Integer to String (itoa)
+        char buf[32];
+        itoa(1234, buf, 10);   // convert integer to string in base 10
+        // buf = "1234"
 
-    itoa(255, buf, 16);    // convert to hex
-    // buf = "ff"
+        itoa(255, buf, 16);    // convert to hex
+        // buf = "ff"
 
-    // -------------------------------
-    // 2. String to Double (atof)
-    // -------------------------------
-    double d1 = atof("3.14159");
-    // d1 = 3.14159
+        /// @brief String to Double (atof)
+        double d1 = atof("3.14159");
+        // d1 = 3.14159
 
-    double d2 = atof("12.5xyz"); 
-    // d2 = 12.5 (atof stops at non-numeric chars)
+        double d2 = atof("12.5xyz"); 
+        // d2 = 12.5 (atof stops at non-numeric chars)
 
-    // -------------------------------
-    // 3. String to Double (strtod)
-    // -------------------------------
-    char* end;
-    double d3 = strtod("45.67abc", &end);
-    // d3 = 45.67
-    // end -> "abc"
+        /// @brief String to Double (strtod)
+        char* end;
+        double d3 = strtod("45.67abc", &end);
+        // d3 = 45.67
+        // end -> "abc"
 
-    // -------------------------------
-    // 4. String to Long (strtol)
-    // -------------------------------
-    long v1 = strtol("1234", NULL, 10);
-    // v1 = 1234 (decimal)
+        /// @brief String to Long (strtol)
+        long v1 = strtol("1234", NULL, 10);
+        // v1 = 1234 (decimal)
 
-    long v2 = strtol("FF", NULL, 16);
-    // v2 = 255 (hex to decimal)
+        long v2 = strtol("FF", NULL, 16);
+        // v2 = 255 (hex to decimal)
 
-    char* end2;
-    long v3 = strtol("100xyz", &end2, 10);
-    // v3 = 100
-    // end2 -> "xyz"
+        char* end2;
+        long v3 = strtol("100xyz", &end2, 10);
+        // v3 = 100
+        // end2 -> "xyz"
 
-    return 0;
-}
-```
+        return 0;
+    }
+    ```
 
 <br>
 
 ---
-## 2. C++ String **<string>**
-Strings are objects that represent sequences of characters.
+## 2. C++ String
+Strings are objects that represent sequences of characters. `<string>`
 
 ### 2.1. Create a String
 ```cpp
@@ -201,6 +172,7 @@ std::string s = "hello";    ///< initialize from a string literal
 std::string s2("hello");    ///< direct initialization from a string literal
 std::string s3(5, 'a');     ///< create a string with 5 copies of 'a' -> "aaaaa"
 ```
+<br>
 
 ### 2.2. Basic Properties
 | Function     | Description           |
@@ -209,6 +181,7 @@ std::string s3(5, 'a');     ///< create a string with 5 copies of 'a' -> "aaaaa"
 | `s.length()` | same as size          |
 | `s.empty()`  | check empty           |
 | `s.clear()`  | remove all characters |
+<br>
 
 ### 2.3. Access Characters
 ```cpp
@@ -217,6 +190,7 @@ s.at(0)     // bounds check
 s.front()   // first char
 s.back()    // last char
 ```
+<br>
 
 ### 2.4. Modify String
 ```cpp
@@ -240,6 +214,7 @@ s.erase(new_end)
 // std::erase(s,'\n')
 s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
 ```
+<br>
 
 ### 2.5. Substring
 ```cpp
@@ -247,6 +222,7 @@ s.erase(std::remove(s.begin(), s.end(), '\n'), s.end());
 std::string s = "abcdef";
 s.substr(2,3);   // "cde"
 ```
+<br>
 
 ### 2.6. Find / Search
 ```cpp
@@ -261,6 +237,7 @@ size_t pos = s.find("abc");
 if (pos != std::string::npos)
     std::cout << "found";
 ```
+<br>
 
 ### 2.7. Compare Strings
 ```cpp
@@ -273,6 +250,7 @@ if (a < b)
 // >0 -> larger
 auto ret = a.compare(b);
 ```
+<br>
 
 ### 2.8. Start/End Checking
 ```cpp
@@ -285,6 +263,8 @@ s.rfind("abc",0) == 0
 s.size() >= 3 &&
 s.compare(s.size()-3,3,"xyz") == 0
 ```
+<br>
+
 ### 2.9. Convert String
 ```cpp
 /// @brief string to int
@@ -294,6 +274,7 @@ double x = std::stod("3.14");
 /// @brief int to string
 std::string s = std::to_string(123);
 ```
+<br>
 
 ### 2.10. String Parsing
 ```cpp
@@ -307,12 +288,14 @@ while(std::getline(ss,item,',')) {
     std::cout << item << std::endl;
 }
 ```
+<br>
 
 ### 2.11. Trim Whitespace
 ```cpp
 s.erase(0, s.find_first_not_of(" \t\n\r"));
 s.erase(s.find_last_not_of(" \t\n\r") + 1);
 ```
+<br>
 
 ### 2.12. Convert Case
 ```cpp
@@ -321,6 +304,7 @@ s.erase(s.find_last_not_of(" \t\n\r") + 1);
 std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 ```
+<br>
 
 ### 2.13. String Formatting
 
@@ -330,6 +314,7 @@ std::transform(s.begin(), s.end(), s.begin(), ::toupper);
 | `+` concatenation | C++98    | Simple                   | Hard to format numbers |
 | `stringstream`    | C++98    | Flexible streaming       | Slow, verbose          |
 | `snprintf`        | C        | Very fast, classic       | Unsafe if misused      |
+<br>
 
 ---
 ## 3. std::cout << , std::cin >> , std::getLine(std::cin >> std::ws, std::string string)

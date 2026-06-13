@@ -11,6 +11,7 @@ ShowToc: true    # Determines whether to display the Table of Contents (TOC) for
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
 weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
+# C++ Fundamentals
 
 #### Basic Concepts
 - `Data` is any information processed or stored by a computer.
