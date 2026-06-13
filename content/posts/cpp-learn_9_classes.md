@@ -1,9 +1,24 @@
+---
+author: "Phong Nguyen"
+title: "C++ - Chapter 9: Class"
+date: "2026-06-13"
+description: "C++ Notes"
+tags: ["cpp"]   #tags search
+FAcategories: ["syntax"]    #The category of the post, similar to tags but usually for broader classification.
+FAseries: ["Themes Guide"]    #indicates that this post is part of a series of related posts
+aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
+ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
+TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
+weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+---
 # Classes
 
 ## 1. Introduction
-- A **class** is a `user-defined blueprint` used to create objects. It defines the `properties and behaviors` that `all objects of that type` share.
-- An **object** is an `instance of a class`. It represents `a real entity` and contains `actual values` for the class’s attributes.
-- An **instance** is a `specific object` created from a class. (In practice, “object” and “instance” are often used interchangeably.)
+A **class** is a `user-defined blueprint` used to create objects. It defines the `properties and behaviors` that `all objects of that type` share.
+
+An **object** is an `instance of a class`. It represents `a real entity` and contains `actual values` for the class's attributes.
+
+An **instance** (instance) is a `specific object` created from a class.
 
 ---
 ## 2. Class Declaration
@@ -15,18 +30,15 @@ A class can contain:
 - Nested types and other class members
 
 #### Declaration and Definition
-A declaration introduces a class name to the compiler, while a definition provides the complete class body.
-
+**A declaration** introduces a class name to the compiler
+**A definition** provides the complete class body.
 ```cpp
 class ClassName;   // declaration
-
-class ClassName // definition
-{
-private:
-    // private members
-
-public:
-    // public members
+class ClassName { // definition
+    private:
+        // private members
+    public:
+        // public members
 };
 ```
 
@@ -36,11 +48,14 @@ ClassName employee {};
 ```
 
 #### Accessing Members
+The dot operator (.) is used to access members of an object.
 ```cpp
 employee.print();
 ```
+<br>
 
 ### 2.2. Access Specifiers
+**Access specifiers** control which parts of a class can access its members
 | Specifier | Description |
 |------------|-------------|
 | `public` | Accessible from anywhere |
@@ -49,63 +64,52 @@ employee.print();
 
 - By default, all members of a `struct` are public members.
 - By default, the members of a class are `private`.
+<br>
 
 ### 2.3. Members:
-- The variable/functions that belong to a class type are called member variables/ functions.
-- In C, structs only have data members, not member functions.
+**Member variables/ functions** are the variables/functions that belong to a class type.
+In C, structs only have data members, not member functions.
 
-### 2.4. const class objects and const member functions
-- Const class objects just like with normal variables, we can make our class type objects const or constexpr.
-- **Const member function** is a member function that guarantees it will not modify the object or call any non-constant member functions.
-	- Syntax: `<returnType> <nameFunction> const(<params>){}`
+### 2.4. Const Class Objects and Const Member Functions
+**Const class objects** just like with normal variables, we can make our class type objects const or constexpr.
 
+**Const member function** is a member function that guarantees it will not modify the object or call any non-constant member functions.
+- Syntax: `<returnType> <nameFunction> const(<params>){}`
+<br>
 
-### 2.5. Temporary class objects
--  A temporary object (sometimes called an `anonymous object` or an `unnamed object`) is an object that has no name and exists only for the duration of a single expression.
-- e.g.
-    ```cpp
-    #include <iostream>
+### 2.5. Temporary Class Object
+**A temporary object** (sometimes called an `anonymous object` or an `unnamed object`) is an object that has no name and exists only for the duration of a single expression.
+```cpp
+class IntPair {
+private:
+    int m_x{};
+    int m_y{};
+public:
+    IntPair(int x, int y) : m_x{x}, m_y{y}{ }
+    int x() const { return m_x; }
+    int y() const{ return m_y; }
+};
 
-    class IntPair
-    {
-    private:
-        int m_x{};
-        int m_y{};
+void print(IntPair p) { }
 
-    public:
-        IntPair(int x, int y)
-            : m_x { x }, m_y { y }
-        {}
+void main()
+{
+    // Case 1: Pass variable
+    IntPair p { 3, 4 };
+    print(p);
 
-        int x() const { return m_x; }
-        int y() const{ return m_y; }
-    };
+    // Case 2: Construct temporary IntPair and pass to function
+    // When the function call returns, the temporary object is destroyed.
+    print(IntPair { 5, 6 } );
 
-    void print(IntPair p)
-    {
-        std::cout << "(" << p.x() << ", " << p.y() << ")\n";
-    }
-
-    int main()
-    {
-        // Case 1: Pass variable
-        IntPair p { 3, 4 };
-        print(p);
-
-        // Case 2: Construct temporary IntPair and pass to function
-        // When the function call returns, the temporary object is destroyed.
-        print(IntPair { 5, 6 } );
-
-        // Case 3: Implicitly convert { 7, 8 } to a temporary Intpair and pass to function
-        print( { 7, 8 } );
-
-        return 0;
-    }
-    ```
+    // Case 3: Implicitly convert { 7, 8 } to a temporary Intpair and pass to function
+    print( { 7, 8 } );
+}
+```
 
 ---
 ## 3. Constructor
-A **constructor** is a special member function that is automatically invoked when a non-aggregate object of a class type is created.
+**A constructor** is a special member function that is automatically invoked when a non-aggregate object of a class type is created.
 
 A constructor is used to:
 - Initialize member variables (typically via a member initialization list).
@@ -123,121 +127,105 @@ Common setup tasks may include:
 - Constructors can be overloaded.
 - For class templates, the constructor name is the class name without template arguments.
     ```cpp
-    class Employee
-    {
+    class Employee {
     public:
-        Employee()            // default constructor
-        {
-        }
+        Employee(){}            // default constructor
 
-        Employee(int id)      // overloaded constructor
-        {
-        }
+        Employee(int id){}      // overloaded constructor
     };
     ```
+<br>
 
-### 3.2. Member initializer lists
-The **member initializer list** is defined after the constructor parameters. 
+### 3.2. Member Initializer Lists
+**The member initializer list** is defined after the constructor parameters. 
 - Begins with a colon (`:`), and then lists each member to initialize along with the initialization value for that variable, separated by a comma (`,`). 
 - Must use a direct form of initialization here (preferably using braces(`{}`), but parentheses(`()`) works as well)
-- e.g.:
     ```cpp
-    Foo(int x, int y) : m_x { x }, m_y { y }
-    {
+    Foo(int x, int y) : m_x { x }, m_y { y } {
         // m_x  = x; this is an assignment
     }
     ```
 - Prefer using the member initializer list to initialize your members over assigning values because in case where members are required to be initialized (such as for data members that are const or references) assignment will not work.
+<br>
 
 ### 3.3. Default Constructor and Default Arguments
 **Default Constructor** is a constructor that accepts no arguments.
 - Because constructors are functions, we can:
-	- Constructors with default arguments
-	- Overloaded constructors
-- **An implicit default constructor** is generated by the compiler when the class has *no user-declared constructors*. This constructor has nothing.
-- **An explicitly default constructor** is used in case we already create the constructor ourselves, but also want the compiler to generate the default constructor. Using keyword `default`
-- e.g.
-    ```cpp
-    class Foo
-    {
-    public:
-        Foo() = default; // generates an explicitly defaulted default constructor
+  - Constructors with default arguments
+  - Overloaded constructors
+<br>
 
-        Foo(int x, int y): m_x { x }, m_y { y }{
-            std::cout << "Foo(" << m_x << ", " << m_y << ") constructed\n";
-        }
+**An implicit default constructor** is generated by the compiler when the class has *no user-declared constructors*. This constructor has nothing.
 
-    private:
-        int m_x {};
-        int m_y {};
-    };
+**An explicitly default constructor** is used in case we already create the constructor ourselves, but also want the compiler to generate the default constructor. Using keyword `default`
+```cpp
+class Foo {
+public:
+    Foo() = default; // generates an explicitly defaulted default constructor
+    Foo(int x, int y): m_x { x }, m_y { y }{
+        std::cout << "Foo(" << m_x << ", " << m_y << ") constructed\n";
+}
 
-    int main()
-    {
-        Foo foo{}; // calls Foo() default constructor
-        return 0;
-    }
-    ```
+private:
+    int m_x {};
+    int m_y {};
+};
+
+void main() {
+    Foo foo{}; // calls Foo() default constructor
+}
+```
+<br>
 
 ### 3.4. Delegating Constructors
 **Delegating Constructors** allow to delegate (transfer responsibility for) initialization to another constructor from the same class type.
 - Simply *call the constructor in the member initializer list*
 - Use of the `static` keyword for the const variables member allows us to have a single  member that is shared by all class objects.
-- e.g.
     ```cpp
-    class Employee
-    {
+    class Employee {
         public:
-            Employee(std::string_view name)
-                : Employee{ name, 0 } // delegate initialization to Employee(std::string_view, int) constructor
-            {
-            }
+            Employee(std::string_view name) : Employee{ name, 0 } {} // delegate initialization to Employee(std::string_view, int) constructor
 
-            Employee(std::string_view name, int id)
-                : m_name{ name }, m_id { id } // actually initializes the members
-            {
-                std::cout << "Employee " << m_name << " created\n";
-            }
+            Employee(std::string_view name, int id) : m_name{ name }, m_id { id } {}// actually initializes the members
         private:
             std::string m_name { "???" };
             int m_id { 0 };
     };
 
-    int main()
-    {
+    void main() {
         Employee e1{ "James" };
         Employee e2{ "Dave", 42 };
     }
     ```
+<br
 
 ### 3.5. Copy Constructor
 **Copy constructor** is a constructor that is used to initialize an object with an existing object of the same type. After the copy constructor executes, the newly created object should be a copy of the object passed in as the initializer.
-- **An implicit copy constructor** is generated by the compiler if we do not provide a one.
-- **An explicitly copy constructor** by explicitly define our own copy constructor
-- e.g.
-    ```cpp
-    Fraction(const Fraction& fraction)
-        // Initialize our members using the corresponding member of the parameter
-        : m_numerator{ fraction.m_numerator }
-        , m_denominator{ fraction.m_denominator }
-    {
-        // do other things
-    }
-    ```
-- Using `= default` to generate a default copy constructor.
-- Using `= delete` to prevent copies.
-    ```cpp
-    // Explicitly request default copy constructor
-    Fraction(const Fraction& fraction) = default;
-    Fraction fCopy { f };
-    
-    // Delete the copy constructor so no copies can be made
-    Fraction(const Fraction& fraction) = delete;
-    Fraction f { 5, 3 };
-    Fraction fCopy { f }; // compile error: copy constructor has been deleted
-    ```
+
+**An implicit copy constructor** is generated by the compiler if we do not provide a one.
+
+**An explicitly copy constructor** by explicitly define our own copy constructor
+```cpp
+Fraction(const Fraction& fraction) 
+    // Initialize our members using the corresponding member of the parameter
+    : m_numerator{ fraction.m_numerator }, m_denominator{ fraction.m_denominator } {}
+```
+
+Using `= default` to generate a default copy constructor.
+Using `= delete` to prevent copies.
+```cpp
+// Explicitly request default copy constructor
+Fraction(const Fraction& fraction) = default;
+Fraction fCopy { f };
+
+// Delete the copy constructor so no copies can be made
+Fraction(const Fraction& fraction) = delete;
+Fraction f { 5, 3 };
+Fraction fCopy { f }; // compile error: copy constructor has been deleted
+```
 > The rule of three is a well known C++ principle that states that if a class requires a user-defined copy constructor, destructor, or copy assignment operator, then it probably requires all three. In C++11, this was expanded to the rule of five, which adds the move constructor and move assignment operator to the list.
 Not following the rule of three/rule of five is likely to lead to malfunctioning code. We’ll revisit the rule of three and rule of five when we cover dynamic memory allocation
+<br>
 
 ### 3.6. Class Initialization and Copy Elision
 **Class initialization** is the process of creating and initializing an object.
@@ -256,82 +244,75 @@ Not following the rule of three/rule of five is likely to lead to malfunctioning
     ```
 
 - **For object with class types**:
-```cpp
-class Foo
-{
-public:
-    // Default constructor
-    Foo(){ /**/ }
+    ```cpp
+    class Foo {
+    public:
+        // Default constructor
+        Foo(){ /**/ }
 
-    // Normal constructor
-    Foo(int x){ /**/ }
+        // Normal constructor
+        Foo(int x){ /**/ }
 
-    // Copy constructor
-    Foo(const Foo&){/**/}
-};
+        // Copy constructor
+        Foo(const Foo&){/**/}
+    };
 
-void main(){
-    // Calls Foo() default constructor
-    Foo f1;           // default initialization
-    Foo f2{};         // value initialization (preferred)
+    void main(){
+        // Calls Foo() default constructor
+        Foo f1;           // default initialization
+        Foo f2{};         // value initialization (preferred)
 
-    // Calls foo(int) normal constructor
-    Foo f3 = 3;       // copy initialization (non-explicit constructors only)
-    Foo f4(4);        // direct initialization
-    Foo f5{ 5 };      // direct list initialization (preferred)
-    Foo f6 = { 6 };   // copy list initialization (non-explicit constructors only)
+        // Calls foo(int) normal constructor
+        Foo f3 = 3;       // copy initialization (non-explicit constructors only)
+        Foo f4(4);        // direct initialization
+        Foo f5{ 5 };      // direct list initialization (preferred)
+        Foo f6 = { 6 };   // copy list initialization (non-explicit constructors only)
 
-    // Calls foo(const Foo&) copy constructor
-    Foo f7 = f3;      // copy initialization
-    Foo f8(f3);       // direct initialization
-    Foo f9{ f3 };     // direct list initialization (preferred)
-    Foo f10 = { f3 }; // copy list initialization
-}
-```
-- For all types of initialization:
+        // Calls foo(const Foo&) copy constructor
+        Foo f7 = f3;      // copy initialization
+        Foo f8(f3);       // direct initialization
+        Foo f9{ f3 };     // direct list initialization (preferred)
+        Foo f10 = { f3 }; // copy list initialization
+    }
+    ```
+
+- **For all types of initialization**:
   - When initializing a class type, the set of constructors for that class are examined, and overload resolution is used to determine the best matching constructor. This may involve implicit conversion of arguments.
   - When initializing a non-class type, the implicit conversion rules are used to determine whether an implicit conversion exists.
   - List initialization disallows narrowing conversions.
   - Copy initialization only considers non-explicit constructors/conversion functions.
   - List initialization prioritizes matching list constructors over other matching constructors. 
-	
+<br>
+
 ### 3.7. Converting constructors and the explicit keyword
-A **converting constructor** is a constructor that can be called with a single argument and allows implicit conversion from one type to another.
-- e.g.
-    ```cpp
-    class Foo
-    {
-    private:
-        int m_x{};
-    public:
-        Foo(int x) : m_x{x}{ }
-        int getX() const { return m_x; }
-    };
+**A converting constructor** is a constructor that can be called with a single argument and allows implicit conversion from one type to another.
+```cpp
+class Foo {
+private:
+    int m_x{};
+public:
+    Foo(int x) : m_x{x}{ }
+    int getX() const { return m_x; }
+};
 
-    void printFoo(Foo f) // has a Foo parameter
-    {
-    }
+void printFoo(Foo f) {} // has a Foo parameter
 
-    void main()
-    {
-        printFoo(5); // we're supplying an int argument
-    }
-    ```
+void main() {
+    printFoo(5); // we're supplying an int argument
+}
+```
 
 - The compiler will check whether there is a constructor that can convert the value in (5) to a Foo object.
 - By default, constructors that can be called with a single argument are converting constructors.
 - Only one user-defined conversion is allowed in an implicit conversion sequence.
-
 <br>
 
 **The `explicit` keyword** is used to to tell the compiler that a constructor should not be used as a converting constructor.
 - For constructors with a separate declaration (inside the class) and definition (outside the class), the explicit keyword is used only on the declaration.
 - Explicit constructors can be used for direct and direct list initialization
 - Prefer use this key work for constructors that take a single argument. 
-- e.g.
     ```cpp
-    class Dollars
-    {
+    class Dollars {
     private:
         int m_dollars{};
 
@@ -340,40 +321,27 @@ A **converting constructor** is a constructor that can be called with a single a
         int getDollars() const { return m_dollars; }
     };
 
-    void print(Dollars d)
-    {
-        std::cout << "$" << d.getDollars();
-    }
+    void print(Dollars d) {}
 
-    int main()
-    {
+    void main() {
         print(5); // compilation error because Dollars(int) is explicit
 
         Dollars d1(5); // ok
         Dollars d2{5}; // ok
-        return 0;
     }
     ```
-
 <br>
 
 **Return by value and explicit constructors** when we return a value from a function, if that value does not match the return type of the function, an implicit conversion will occur. Just like with pass by value, such conversions cannot use explicit constructors.
-  - e.g.
   ```cpp
-  class Foo
-  {
+  class Foo {
   public:
-      explicit Foo() // note: explicit
-      {
-      }
+      explicit Foo() {} // note: explicit
 
-      explicit Foo(int x) // note: explicit
-      {
-      }
+      explicit Foo(int x){} // note: explicit
   };
 
-  Foo getFoo()
-  {
+  Foo getFoo() {
       // explicit Foo() cases
       return Foo{ };   // ok
       return { };      // error: can't implicitly convert initializer list to Foo
@@ -391,30 +359,29 @@ A **converting constructor** is a constructor that can be called with a single a
 
 > For example, the classes that use a resource (most often memory, but sometimes files, databases, network connections, etc…) often need to be explicitly sent or closed before the class object using them is destroyed. In other cases, we may want to do some record-keeping prior to the destruction of the object, such as writing information to a log file, or sending a piece of telemetry to a server. The term “clean up” is often used to refer to any set of tasks that a class must perform before an object of the class is destroyed in order to behave as expected. If we have to rely on the user of such a class to ensure that the function that performs clean up is called prior to the object being destroyed, we are likely to run into errors somewhere.
 
-- **Syntax**:
-    - A destructor has the same name as the class, prefixed with a tilde **(~)**.
-    - A destructor cannot take parameters.
-    - A destructor has no return type.
-    - A class can have only one destructor.
-- **An implicit destructor**: If a class does not declare a destructor, the compiler automatically generates one.
+**Syntax**:
+  - A destructor has the same name as the class, prefixed with a tilde **(~)**.
+  - A destructor cannot take parameters.
+  - A destructor has no return type.
+  - A class can have only one destructor.
+
+**An implicit destructor**: If a class does not declare a destructor, the compiler automatically generates one.
 
 ---
 ## 5. this
 C++ utilizes a hidden pointer named **this**. **this** is a const pointer that stores the address of the current implicit object.
-- e.g.
-    ```cpp
-    simple.set_id(2); 
-    Simple::set_id(&simple, 2); // note that simple has been changed from an object prefix to a function argument!
+```cpp
+simple.set_id(2); 
+Simple::set_id(&simple, 2); // note that simple has been changed from an object prefix to a function argument!
 
-    // implementation
-    void set_id(int id) { m_id = id; }
-    static void set_id(Simple* const this, int id) { this->m_id = id; }
-    ```
-- **Explanations:**
-  - When we call `simple.set_id(2)`, the compiler actually calls `Simple::setID(&simple, 2)`, and simple is passed by address to the function.
-  - The function has a hidden parameter named this which receives the address of simple.
-  - Member variables inside `set_id` are prefixed with `this->`, which points to simple. So when the compiler evaluates `this->m_id`, it's actually resolving to `simple.m_id`.
-  - All non-static member functions have a this const pointer that holds the address of the implicit object. `this` always points to the object being operated on
+// implementation
+void set_id(int id) { m_id = id; }
+static void set_id(Simple* const this, int id) { this->m_id = id; }
+```
+- When we call `simple.set_id(2)`, the compiler actually calls `Simple::setID(&simple, 2)`, and simple is passed by address to the function.
+- The function has a hidden parameter named this which receives the address of simple.
+- Member variables inside `set_id` are prefixed with `this->`, which points to simple. So when the compiler evaluates `this->m_id`, it's actually resolving to `simple.m_id`.
+- All non-static member functions have a this const pointer that holds the address of the implicit object. `this` always points to the object being operated on
 
 ---
 ## 6. Static member
@@ -427,14 +394,12 @@ C++ utilizes a hidden pointer named **this**. **this** is a const pointer that s
 - Defining and initializing static member variables:
 	- Initialization of static member variables inside the class definition
 	- Make your static members `inline` or `constexpr` so they can be initialized inside the class definition (.h).  
-
 <br>
 
 **Static member functions** are member functions that can be called with no object.
   - Can access to the static members via non-static function but requires us to instantiate an object to call
   - Because static member functions are not attached to an object, they have no this pointer
   - Can directly access other static members (variables or functions), but not non-static members.
-- e.g.
     ```cpp
     class Counter {
     public:
@@ -501,27 +466,20 @@ A **nested type** is any type declared inside a class, such as a nested class, s
   - Putting class definitions in a header file.
   - Prefer to put your class definitions in a header file with the same name as the class. 
   - Trivial member functions (such as access functions, constructors with empty bodies,Default arguments for member functions, etc…) can be defined inside the class definition.
-
 <br>
 
 **Inline member functions**
-  - Any member function defined inside the class definition is implicitly inline.
-  - Member functions defined outside the class definition are not implicitly inline. (and thus are subject to the one definition per program part of the one-definition rule).
-  - If a member function is defined outside the class definition but remains in a header file, it should generally be marked inline.
-
-- e.g.
+- Any member function defined inside the class definition is implicitly inline.
+- Member functions defined outside the class definition are not implicitly inline. (and thus are subject to the one definition per program part of the one-definition rule).
+- If a member function is defined outside the class definition but remains in a header file, it should generally be marked inline.
     ```cpp
     /// @brief myclass.h
-    class MyClass
-    {
+    class MyClass {
     public:
         void print();
     };
 
-    inline void MyClass::print()
-    {
-        std::cout << "Hello\n";
-    }
+    inline void MyClass::print(){}
 
     /// @brief myclass.h / myclass.cpp
     class MyClass
@@ -539,38 +497,32 @@ A **nested type** is any type declared inside a class, such as a nested class, s
 
 ---
 ## 9. Ref Qualifiers
-- C++11 introduced a little known feature called a **ref-qualifier** that allows us to overload a member function based on whether it is being called on an lvalue or an rvalue implicit object. Using this feature, we can create two versions of getName() -- one for the case where our implicit object is an lvalue, and one for the case where our implicit object is an rvalue.
-- e.g.
-    ```cpp
-    class Employee
-    {
-    private:
-        std::string m_name{};
+C++11 introduced a little known feature called a **ref-qualifier** that allows us to overload a member function based on whether it is being called on an lvalue or an rvalue implicit object. Using this feature, we can create two versions of getName() -- one for the case where our implicit object is an lvalue, and one for the case where our implicit object is an rvalue.
+```cpp
+class Employee {
+private:
+    std::string m_name{};
 
-    public:
-        Employee(std::string_view name): m_name { name } {}
+public:
+    Employee(std::string_view name): m_name { name } {}
 
-        const std::string& getName() const &  { return m_name; } //  & qualifier overloads function to match only lvalue implicit objects
-        std::string        getName() const && { return m_name; } // && qualifier overloads function to match only rvalue implicit objects
-    };
+    const std::string& getName() const &  { return m_name; } //  & qualifier overloads function to match only lvalue implicit objects
+    std::string        getName() const && { return m_name; } // && qualifier overloads function to match only rvalue implicit objects
+};
 
-    // createEmployee() returns an Employee by value (which means the returned value is an rvalue)
-    Employee createEmployee(std::string_view name)
-    {
-        Employee e { name };
-        return e;
-    }
+// createEmployee() returns an Employee by value (which means the returned value is an rvalue)
+Employee createEmployee(std::string_view name) {
+    Employee e { name };
+    return e;
+}
 
-    int main()
-    {
-        Employee joe { "Joe" };
-        std::cout << joe.getName() << '\n'; // Joe is an lvalue, so this calls std::string& getName() & (returns a reference)
+void main() {
+    Employee joe { "Joe" };
+    std::cout << joe.getName() << '\n'; // Joe is an lvalue, so this calls std::string& getName() & (returns a reference)
 
-        std::cout << createEmployee("Frank").getName() << '\n'; // Frank is an rvalue, so this calls std::string getName() && (makes a copy)
-
-        return 0;
-    }
-    ```
+    std::cout << createEmployee("Frank").getName() << '\n'; // Frank is an rvalue, so this calls std::string getName() && (makes a copy)
+}
+```
 
 ---
 ## 10. Friend
@@ -585,73 +537,114 @@ Friendship grants access, but does not make the friend a member of the class.
 
 ### 10.1. Friend Non-member Function
 **A friend non-member function** is a regular function that is not a member of a class, but has been granted access to the **class's private and protected members** using the friend keyword.
-- e.g.
-    ```cpp
-    class Accumulator
-    {
-    private:
-        int m_value { 0 };
+```cpp
+class Accumulator
+{
+private:
+    int m_value { 0 };
 
-    public:
-        void add(int value) { m_value += value; }
+public:
+    void add(int value) { m_value += value; }
 
-        // Here is the friend declaration that makes non-member function void print(const Accumulator& accumulator) a friend of Accumulator
-        // member function but it have friend keyword, it is instead treated as a non-member function
-        friend void print(const Accumulator& accumulator);
-    };
+    // Here is the friend declaration that makes non-member function void print(const Accumulator& accumulator) a friend of Accumulator
+    // member function but it have friend keyword, it is instead treated as a non-member function
+    friend void print(const Accumulator& accumulator);
+};
 
-    /// @brief Friend Non-member Function
-    void print(const Accumulator& accumulator)
-    {
-        // it can access the private members of Accumulator
-        std::cout << accumulator.m_value;
-    }
+/// @brief Friend Non-member Function
+void print(const Accumulator& accumulator)
+{
+    // it can access the private members of Accumulator
+    std::cout << accumulator.m_value;
+}
 
-    int main()
-    {
-        Accumulator acc{};
-        acc.add(5); // add 5 to the accumulator
+int main()
+{
+    Accumulator acc{};
+    acc.add(5); // add 5 to the accumulator
 
-        print(acc); // call the print() non-member function
+    print(acc); // call the print() non-member function
 
-        return 0;
-    }
-    ```
+    return 0;
+}
+```
+A friend non-member function can be defined inside the class definition or declared inside the class and defined later outside the class.
 
-- A friend non-member function can be defined inside the class definition or declared inside the class and defined later outside the class.
-- **Multiple friends:** A single function can be a friend of multiple classes simultaneously.
+**Multiple friends:** A single function can be a friend of multiple classes simultaneously.
+<br>
 
 ### 10.2. Friend Member Function
 **A friend member function** is a specific member function of one class that is granted access to the private and protected members of another class.
-- e.g. 
-    ```cpp
-    class Storage; // forward declaration for class Storage
-    class Display
-    {
-    private:
-        bool m_displayIntFirst {};
+```cpp
+class Storage; // forward declaration for class Storage
+class Display
+{
+private:
+    bool m_displayIntFirst {};
 
-    public:
-        Display(bool displayIntFirst) : m_displayIntFirst { displayIntFirst }{}
-        void displayStorage(const Storage& storage); // forward declaration for Storage needed for reference here
-    };
+public:
+    Display(bool displayIntFirst) : m_displayIntFirst { displayIntFirst }{}
+    void displayStorage(const Storage& storage); // forward declaration for Storage needed for reference here
+};
 
-    class Storage // full definition of Storage class
-    {
-    private:
-        int m_nValue {};
-        double m_dValue {};
-    public:
-        Storage(int nValue, double dValue): m_nValue { nValue }, m_dValue { dValue }{}
+class Storage // full definition of Storage class
+{
+private:
+    int m_nValue {};
+    double m_dValue {};
+public:
+    Storage(int nValue, double dValue): m_nValue { nValue }, m_dValue { dValue }{}
 
-        // Make the Display::displayStorage member function a friend of the Storage class
-        // Requires seeing the full definition of class Display (as displayStorage is a member)
-        friend void Display::displayStorage(const Storage& storage);
-    };
+    // Make the Display::displayStorage member function a friend of the Storage class
+    // Requires seeing the full definition of class Display (as displayStorage is a member)
+    friend void Display::displayStorage(const Storage& storage);
+};
 
-    // Now we can define Display::displayStorage
-    // Requires seeing the full definition of class Storage (as we access Storage members)
-    void Display::displayStorage(const Storage& storage)
+// Now we can define Display::displayStorage
+// Requires seeing the full definition of class Storage (as we access Storage members)
+void Display::displayStorage(const Storage& storage)
+{
+    if (m_displayIntFirst)
+        std::cout << storage.m_nValue << ' ' << storage.m_dValue << '\n';
+    else // display double first
+        std::cout << storage.m_dValue << ' ' << storage.m_nValue << '\n';
+}
+
+int main()
+{
+    Storage storage { 5, 6.7 };
+    Display display { false };
+    display.displayStorage(storage);
+
+    return 0;
+}
+```
+<br>
+
+### 10.3. Friend Class
+**A friend class** is a class that can access the private and protected members of another class.
+```cpp
+class Storage
+{
+private:
+    int m_nValue {};
+    double m_dValue {};
+public:
+    Storage(int nValue, double dValue): m_nValue { nValue }, m_dValue { dValue }{ }
+
+    friend class Display; ///< Make the Display class a friend of Storage
+};
+
+class Display
+{
+private:
+    bool m_displayIntFirst {};
+
+public:
+    Display(bool displayIntFirst): m_displayIntFirst { displayIntFirst }{}
+
+    // Because Display is a friend of Storage, Display members can access the private members of Storage
+    void displayStorage(const Storage& storage)
     {
         if (m_displayIntFirst)
             std::cout << storage.m_nValue << ' ' << storage.m_dValue << '\n';
@@ -659,67 +652,25 @@ Friendship grants access, but does not make the friend a member of the class.
             std::cout << storage.m_dValue << ' ' << storage.m_nValue << '\n';
     }
 
-    int main()
+    void setDisplayIntFirst(bool b)
     {
-        Storage storage { 5, 6.7 };
-        Display display { false };
-        display.displayStorage(storage);
-
-        return 0;
+        m_displayIntFirst = b;
     }
-    ```
+};
 
-### 10.3. Friend Class
-**A friend class** is a class that can access the private and protected members of another class.
-- e.g. 
-    ```cpp
-    class Storage
-    {
-    private:
-        int m_nValue {};
-        double m_dValue {};
-    public:
-        Storage(int nValue, double dValue): m_nValue { nValue }, m_dValue { dValue }{ }
+int main()
+{
+    Storage storage { 5, 6.7 };
+    Display display { false };
 
-        friend class Display; ///< Make the Display class a friend of Storage
-    };
+    display.displayStorage(storage);
 
-    class Display
-    {
-    private:
-        bool m_displayIntFirst {};
+    display.setDisplayIntFirst(true);
+    display.displayStorage(storage);
 
-    public:
-        Display(bool displayIntFirst): m_displayIntFirst { displayIntFirst }{}
-
-        // Because Display is a friend of Storage, Display members can access the private members of Storage
-        void displayStorage(const Storage& storage)
-        {
-            if (m_displayIntFirst)
-                std::cout << storage.m_nValue << ' ' << storage.m_dValue << '\n';
-            else // display double first
-                std::cout << storage.m_dValue << ' ' << storage.m_nValue << '\n';
-        }
-
-        void setDisplayIntFirst(bool b)
-        {
-            m_displayIntFirst = b;
-        }
-    };
-
-    int main()
-    {
-        Storage storage { 5, 6.7 };
-        Display display { false };
-
-        display.displayStorage(storage);
-
-        display.setDisplayIntFirst(true);
-        display.displayStorage(storage);
-
-        return 0;
-    }
-    ```
+    return 0;
+}
+```
 
 ---
 ## 11. Shallow copying & Deep copying
@@ -732,16 +683,16 @@ Friendship grants access, but does not make the friend a member of the class.
   - Allocates memory for the copy and then copies the actual values, so that the copy lives in memory distinct from the source.
   - The original and the copy will not affect each other in any way.
   - This requires write our own `default copy constructor` and `default assigment operators`
-
 <br>
 
-- **Role of three:**
-    >If a class requires a user-defined destructor, a user-defined copy constructor, or a user-defined copy assignment operator, it almost certainly requires all three.This ensures proper resource management and avoids shallow copy problems.
-- **Role of five:**
-    >Extends the Rule of Three in C++11 and later. In addition to the destructor, copy constructor, and copy assignment operator, it includes the move constructor and move assignment operator. This allows efficient transfer of resources instead of copying.
-- **Role of zero:**
-    >The best practice is to write classes that do not manage resources directly, letting the compiler generate all special member functions automatically. This avoids the need to define destructors or copy/move operations manually.
+**Role of three:**
+If a class requires a user-defined destructor, a user-defined copy constructor, or a user-defined copy assignment operator, it almost certainly requires all three.This ensures proper resource management and avoids shallow copy problems.
 
+**Role of five:**
+Extends the Rule of Three in C++11 and later. In addition to the destructor, copy constructor, and copy assignment operator, it includes the move constructor and move assignment operator. This allows efficient transfer of resources instead of copying.
+
+**Role of zero:**
+The best practice is to write classes that do not manage resources directly, letting the compiler generate all special member functions automatically. This avoids the need to define destructors or copy/move operations manually.
 
 ### TODO:
 Copy Assignment Operator
