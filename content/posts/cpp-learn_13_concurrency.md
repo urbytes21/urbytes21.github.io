@@ -217,11 +217,11 @@ Tasks are generally preferred over raw threads because:
 
     [Producer Thread]                  [Consumer Thread]
     std::promise<T>                    std::future<T>
-          |                                   ^
-          | get_future()                      |
-          +-----------------------------------+
+          |                                   |
+          | get_future() // main bind         |
+          +---------------------------------->+
    set_value()     |                          | 
-   set_exception() v                          | get()/wait()
+   set_exception() v                          v get()/wait()
                           Shared State
                         +---------------+
                         |   Value /     |
