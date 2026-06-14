@@ -1,3 +1,17 @@
+---
+author: "Phong Nguyen"
+title: "C++ - Chapter 10: OOP"
+date: "2026-06-13"
+description: "C++ Notes"
+tags: ["cpp"]   #tags search
+FAcategories: ["syntax"]    #The category of the post, similar to tags but usually for broader classification.
+FAseries: ["Themes Guide"]    #indicates that this post is part of a series of related posts
+aliases: ["migrate-from-jekyl"]    #Alternative URLs or paths that can be used to access this post, useful for redirects from old posts or similar content.
+ShowToc: true    # Determines whether to display the Table of Contents (TOC) for the post.
+TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
+weight: 1    # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
+---
+
 # Object Oriented Programming
 
 **Four Pillars of OOP in C++**:
@@ -569,3 +583,5 @@ Abstraction can be divided into two types:
 
 ---
 ### 6. Virtual Methods/ Virtual Tables: TODO
+
+---
