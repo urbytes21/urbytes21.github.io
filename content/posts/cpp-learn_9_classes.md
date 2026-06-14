@@ -617,7 +617,7 @@ Extends the Rule of Three in C++11 and later. In addition to the destructor, cop
 **Role of zero:**
 The best practice is to write classes that do not manage resources directly, letting the compiler generate all special member functions automatically. This avoids the need to define destructors or copy/move operations manually.
 
-### TODO:
+---
+## 12. TODO:
 Copy Assignment Operator
 Move Constructor / Move Assignment Operator
-Rule of Zero / Three / Five

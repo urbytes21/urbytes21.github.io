@@ -80,6 +80,7 @@
   - The initialization list of the derived class initializes members of the derived class.
   - The body of the derived class constructor executes.
   - Control is returned to the caller.
+<br>
 
 ### 2.2. Inheritance and Access Specifiers
 - C++ defaults to **private inheritance**
@@ -105,59 +106,53 @@
 
     class Def : Base {};  // Defaults to private inheritance
     ```
+<br>
 
 ### 2.3. Calling and Modifying Inherited Function Behavior
-- **Adding new functionality to a derived class:** A derived class can inherit the functionality of its base class and then add new functionality, modify existing functionality, or hide functionality that is not desired.
+**Adding new functionality to a derived class:** A derived class can inherit the functionality of its base class and then add new functionality, modify existing functionality, or hide functionality that is not desired.
 <br>
 
-- **Calling inherited functions:** Inherited member functions can be called just like members defined in the derived class. When `derived.baseFunction()` is called, the compiler first looks for `baseFunction()` in `Derived`. If it is not found there, the compiler continues searching in the base class (`Base`). If `Base` defines `baseFunction()`, that function is used.
+**Calling inherited functions:** Inherited member functions can be called just like members defined in the derived class. When `derived.baseFunction()` is called, the compiler first looks for `baseFunction()` in `Derived`. If it is not found there, the compiler continues searching in the base class (`Base`). If `Base` defines `baseFunction()`, that function is used.
 <br>
 
-- **Redefining behavior:** To change how a function inherited from a base class behaves, redefine the function in the derived class.
+**Redefining behavior:** To change how a function inherited from a base class behaves, redefine the function in the derived class.
 <br>
 
-- **Extending existing functionality:** A derived function can call the base class version of a function and then perform additional work. Use the scope resolution operator (`Base::`) to explicitly invoke the base class implementation.
+**Extending existing functionality:** A derived function can call the base class version of a function and then perform additional work. Use the scope resolution operator (`Base::`) to explicitly invoke the base class implementation.
 <br>
 
-- **Overload resolution in derived classes:** When a derived class declares a function with the same name as one in the base class, all base-class overloads with that name become hidden. A using-declaration such as `using Base::function;` brings the hidden overloads back into the scope of `Derived`, making them available for overload resolution. As a result, `Base::function(int)` can be selected instead of `Derived::function(double)` when calling `derived.function(5)`, if it provides a better match.
+**Overload resolution in derived classes:** When a derived class declares a function with the same name as one in the base class, all base-class overloads with that name become hidden. A using-declaration such as `using Base::function;` brings the hidden overloads back into the scope of `Derived`, making them available for overload resolution. As a result, `Base::function(int)` can be selected instead of `Derived::function(double)` when calling `derived.function(5)`, if it provides a better match.
   ```cpp
   // ===== Base class =====
   class Base {
   public:
-    void baseFunction() { cout << "Base::baseFunction()" << endl; }
-
-    void greet() { cout << "Hello from Base!" << endl; }
-
-    void function(int x) {
-      cout << "Base::function(int) called with " << x << endl;
-    }
+    void baseFunction() {}
+    void greet() {}
+    void function(int x) {}
   };
 
   // ===== Derived class =====
   class Derived : public Base {
   public:
     // 1. Redefining (overriding) behavior
-    void greet() { cout << "Hello from Derived!" << endl; }
+    void greet() {}
 
     // 2. Adding to existing functionality
     void greetWithBase() {
-      cout << "Derived part first -> ";
       Base::greet();  // call the Base version explicitly
     }
 
     // 3. Hiding base function by defining same name
-    void baseFunction() { cout << "Derived::baseFunction()" << endl; }
+    void baseFunction() {}
 
     // 4. Overload resolution
-    void function(double x) {
-      cout << "Derived::function(double) called with " << x << endl;
-    }
+    void function(double x) {}
 
     // Bring Base::function(int) into scope for overload resolution
     using Base::function;
   };
 
-  int main() {
+  void main() {
     Derived d;
 
     cout << "\n--- Calling inherited function ---" << endl;
@@ -173,8 +168,6 @@
     cout << "\n--- Overload resolution ---" << endl;
     d.function(10);    // selects Base::function(int)
     d.function(3.14);  // selects Derived::function(double)
-
-    return 0;
   }
   ```
 
@@ -212,7 +205,7 @@
     int getValue() const = delete;  // disable inherited function
   };
 
-  int main() {
+  void main() {
     Derived derived{7};
 
     // std::cout << derived.m_value; // error: m_value is private in Derived
@@ -227,13 +220,11 @@
     std::cout << derived.Base::getValue() << '\n';  // okay
 
     std::cout << static_cast<Base&>(derived).getValue() << '\n';  // okay
-
-    return 0;
   }
   ```
 
 ### 2.5. Multiple inheritance
-- C++ provides the ability to do multiple inheritance. Multiple inheritance enables a derived class to inherit members from more than one parent.
+C++ provides the ability to do multiple inheritance. **Multiple inheritance** enables a derived class to inherit members from more than one parent.
 - Avoid multiple inheritance unless alternatives lead to more complexity. (**diamond problem**)
     ```cpp
     /// @brief The Diamond Problem
@@ -272,6 +263,7 @@
   - Implemented using **function overloading** and **templates**
 - **Runtime polymorphism** refers to forms of polymorphism that are resolved at runtime. This is primarily achieved through virtual functions.
   - Implemented using **inheritance**, **virtual functions**, and **function overriding**
+<br>
 
 ### 3.1. Pointers and References to Base Classes
 **Pointers, references, and derived classes:** We can not only assign `Derived*` pointers and `Derived&` references to derived objects, but also assign `Base*` pointers and `Base&` references to derived objects. This is known as **up-casting** and happens implicitly.
@@ -286,6 +278,7 @@
 
 - **Using pointers and references to base classes** A base-class pointer or reference can refer to any object derived from that base class, allowing a single interface to work with multiple derived types.
 - However, calls made through a base-class pointer or reference use the base-class version of a function unless that function is declared `virtual`.
+<br>
 
 ### 3.2. Virtual Functions and Runtime Polymorphism
 A **virtual function** is a special type of member function that, when called through a base-class pointer or reference, resolves to the **most-derived override** for the actual type of the object at runtime.
@@ -322,6 +315,7 @@ A **virtual function** is a special type of member function that, when called th
 
   // RESULT: rBase is a Derived
   ```
+<br>
 
 ### 3.3. The `override` and `final` Specifiers, and Covariant Return Types
 #### 3.3.1. The `override` Specifier
@@ -365,7 +359,7 @@ Normally, an overriding function must have the same return type as the virtual f
     void speak() const override final { std::cout << "Woof\n"; }
   };
 
-  int main() {
+  void main() {
     Dog dog{};
 
     Animal* animal{&dog};
@@ -375,59 +369,57 @@ Normally, an overriding function must have the same return type as the virtual f
     Animal* copy{animal->clone()};  // actually returns a Dog*
 
     delete copy;
-
-    return 0;
   }
   ```
+<br>
 
 ### 3.4. Virtual Destructors and Ignoring Virtualization
-- **Virtual destructors** If a class is intended to be used polymorphically, its destructor should generally be declared `virtual`. This ensures that deleting a derived object through a base-class pointer correctly calls the entire destructor chain.
-- **Ignoring virtualization** Virtual dispatch can be bypassed by explicitly qualifying the function with the class name and scope resolution operator (`::`).
-  ```cpp
-  class Base {
-  public:
-    /// @brief Virtual destructor
-    virtual ~Base() { std::cout << "Calling ~Base()\n"; }
-    virtual std::string_view getName() const { return "Base"; }
-  };
+**Virtual destructors** If a class is intended to be used polymorphically, its destructor should generally be declared `virtual`. This ensures that deleting a derived object through a base-class pointer correctly calls the entire destructor chain.
+**Ignoring virtualization** Virtual dispatch can be bypassed by explicitly qualifying the function with the class name and scope resolution operator (`::`).
+```cpp
+class Base {
+public:
+  /// @brief Virtual destructor
+  virtual ~Base() { std::cout << "Calling ~Base()\n"; }
+  virtual std::string_view getName() const { return "Base"; }
+};
 
-  class Derived : public Base {
-  private:
-    int* m_array{};
+class Derived : public Base {
+private:
+  int* m_array{};
 
-  public:
-    Derived(int length) : m_array{new int[length]} {}
+public:
+  Derived(int length) : m_array{new int[length]} {}
 
-    ~Derived() override {
-      std::cout << "Calling ~Derived()\n";
-      delete[] m_array;
-    }
-
-    std::string_view getName() const override { return "Derived"; }
-  };
-
-  int main() {
-    Derived derived{5};
-    Base& baseRef{derived};
-
-    // Virtual dispatch
-    std::cout << baseRef.getName() << '\n';  // Derived
-
-    // Ignore virtualization
-    std::cout << baseRef.Base::getName() << '\n';  // Base
-
-    Base* basePtr{new Derived{5}};
-    delete basePtr;  // Calls ~Derived() then ~Base()
-
-    return 0;
+  ~Derived() override {
+    std::cout << "Calling ~Derived()\n";
+    delete[] m_array;
   }
 
-  /// Output:
-  // Derived
-  // Base
-  // Calling ~Derived()
-  // Calling ~Base()
-  ```
+  std::string_view getName() const override { return "Derived"; }
+};
+
+void main() {
+  Derived derived{5};
+  Base& baseRef{derived};
+
+  // Virtual dispatch
+  std::cout << baseRef.getName() << '\n';  // Derived
+
+  // Ignore virtualization
+  std::cout << baseRef.Base::getName() << '\n';  // Base
+
+  Base* basePtr{new Derived{5}};
+  delete basePtr;  // Calls ~Derived() then ~Base()
+}
+
+/// Output:
+// Derived
+// Base
+// Calling ~Derived()
+// Calling ~Base()
+```
+<br>
 
 ### 3.5. Early Binding and Late Binding
 **Early binding** when a direct call is made to a non-member function or a non-virtual member function, the compiler can determine which function definition should be matched to the call. 
@@ -436,6 +428,7 @@ Normally, an overriding function must have the same return type as the virtual f
 > Early binding/static dispatch = direct function call overload resolution
 Late binding = indirect function call resolution
 Dynamic dispatch = virtual function override resolution 
+<br>
 
 ### 3.6. Virtual Base Classes
 **A virtual base class** is used in virtual inheritance to prevent multiple copies of the same base class from appearing in an inheritance hierarchy when multiple inheritance is used.
@@ -446,16 +439,13 @@ Dynamic dispatch = virtual function override resolution
 - The most derived class is responsible for constructing the virtual base class.
   ```cpp
   class PoweredDevice {};
-
   class Scanner : virtual public PoweredDevice {};
-
   class Printer : virtual public PoweredDevice {};
-
   class Copier : public Scanner, public Printer {};
 
   /// Both Scanner and Printer inherit from PoweredDevice. 
   ```
-
+<br>
 
 ### 3.6. Interface Class
 **An interface class** is a class that:
@@ -463,6 +453,7 @@ Dynamic dispatch = virtual function override resolution
 - Contains only pure virtual functions.
 - Defines a set of functions that derived classes must implement.
 - Cannot be instantiated.
+<br>
 
 ### 3.7. Pure Virtual Function and Abstract Base Class 
 **A pure virtual function** is a virtual function that has no implementation in the base class and is declared by assigning `= 0`.
@@ -500,6 +491,7 @@ Dynamic dispatch = virtual function override resolution
 - This can provide common functionality that derived classes may call explicitly.
 - Even when a definition is provided, the function remains pure virtual and the class remains abstract.
 - The function definition must be provided outside the class declaration.
+<br>
 
 ### 3.8. Object Slicing
 **Object slicing** occurs when a derived class object is assigned to a base class object.
@@ -536,7 +528,6 @@ Abstraction can be divided into two types:
   - Using abstract classes and pure virtual functions
   ```cpp
   class Car {
-  private:
       int speed; // hidden data
 
   public:
@@ -544,7 +535,6 @@ Abstraction can be divided into two types:
           speed += 10;
       }
   };
-
 
   /// We only knows that accelerate() increases the car's speed.
   /// The implementation details and the speed variable are hidden inside the class.
@@ -558,7 +548,6 @@ Abstraction can be divided into two types:
 - Implementation of Abstraction in C++ by using access specifiers (public, private, protected)
   ```cpp
   class BankAccount {
-  private:
       double balance;
 
   public:
@@ -579,5 +568,4 @@ Abstraction can be divided into two types:
   ```
 
 ---
-### Virtual Methods/ Virtual Tables
-### Rule of Zero, Five, Three
+### 6. Virtual Methods/ Virtual Tables: TODO
