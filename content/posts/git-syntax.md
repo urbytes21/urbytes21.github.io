@@ -226,13 +226,26 @@ $ git config --global --add safe.directory <path>
 git submodule update --init
 
 # Run a single Git command without SSL certificate verification
-git -c http.sslVerify=false <git-command>
+$ git -c http.sslVerify=false <git-command>
+$ git config --global http.sslVerify false
 
 # Set upstream branch
 git branch --set-upstream-to=origin/<branch_name>
 
 # Copy a file from another branch without switching branches
 git checkout <branch> -- <file>
+
+# Verify the connect to the remote
+$ git ls-remote origin
+
+# Remove cached credentials
+$ git credential reject <<EOF
+protocol=https
+host=<>
+EOF
+
+
+
 ```
 
 ---

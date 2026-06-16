@@ -229,8 +229,8 @@ target_link_libraries(Tutorial2
 ```
 
 ### 2.4. Subdirectories
-- Use add_subdirectory(<subname>) to incorporate the CLMs - CMakeLists.txt located in a subdirectory of the project.
-- The relative paths used inside that subdirectory’s CMakeLists.txt are interpreted relative to that subdirectory.
+- Use `add_subdirectory(<subname>)` to incorporate the CLMs - CMakeLists.txt located in a subdirectory of the project.
+- The relative paths used inside that subdirectory's CMakeLists.txt are interpreted relative to that subdirectory.
 
 - e.g
 ```bash
@@ -287,8 +287,10 @@ target_sources(MathFunctions
 )
 ```
 
-----
+- `add_subdirectory(src_dir <bin_dir>)`
+  - bin_dir: where CMake generates build files and store build artifacts
 
+----
 ## 3. CMake Language
 - The only fundamental types in CMake are:
   -  `String`: e.g. "abc"
