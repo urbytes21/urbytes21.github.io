@@ -1,8 +1,8 @@
 ---
 author: "Phong Nguyen"
-title: "CMake Guide"
+title: "CMake Notes"
 date: "2025-08-21"
-description: "CMake Learning."
+description: "CMake Notes."
 tags: ["cmake"]   #tags search
 FAcategories: ["syntax"]    #The category of the post, similar to tags but usually for broader classification.
 FAseries: ["Themes Guide"]    #indicates that this post is part of a series of related posts
@@ -13,19 +13,21 @@ weight: 1    # The order in which the post appears in a list of posts. Lower num
 ---
 
 ## 1. Introduction
-- It's a meta-build system generator.
-- How it works:
-    - We write high-level instructions in a `CMakeLists.txt` file (platform-agnostic).Then CMake generates build system files for the platform we choose:
-      - On Linux/Unix: generates Makefile (for make) or build.ninja (for ninja).
-      - On Windows: generates Visual Studio solutions (.sln).
-      - On macOS: can generate Xcode projects.
+**CMake** is a tool used for meta-build system generator.
+- We write high-level instructions in a `CMakeLists.txt` file (platform-agnostic).Then CMake generates build system files for the platform we choose:
+  - On Linux/Unix: generates Makefile (for make) or build.ninja (for ninja).
+  - On Windows: generates Visual Studio solutions (.sln).
+  - On macOS: can generate Xcode projects.
+<br>
 
-- **CMake Generators:** CMake support multiple build systems output a.k.a generators. Which generator is used can be controlled via `CMAKE_GENERATOR` or `cmake -G` option
-- **Single/Multi-Configuration Generators**: Software builds often have several variants e.g. Debug, Release, RelWithDebInfo, and MinSizeRel. To select build type:
-  - single-generator(ninja,make): via `cmake --DCMAKE_BUILD_TYPE=<config>`
-  - multi-generator(ninja-mul,vs): single &  `cmake --build --config `
+**CMake Generators:** CMake support multiple build systems output a.k.a generators. Which generator is used can be controlled via `CMAKE_GENERATOR` or `cmake -G` option
 
-- **Usage Basics:**
+**Single/Multi-Configuration Generators**: Software builds often have several variants e.g. Debug, Release, RelWithDebInfo, and MinSizeRel. To select build type:
+- single-generator(ninja,make): via `cmake --DCMAKE_BUILD_TYPE=<config>`
+- multi-generator(ninja-mul,vs): single &  `cmake --build --config `
+
+---
+**Usage Basics:**
 ```bash
 # install cmake
 $ sudo apt install cmake
@@ -34,20 +36,16 @@ $ sudo apt install cmake
 $ cmake --version
 cmake version 3.23.5
 
-# specific project root dir, which contains the root CMakeLists.txt
-# default current dir
+# specific project root dir, which contains the root CMakeLists.txt, default current dir
 $ cmake -S <dir> 
 
-# specific build dir
-# default current dir
+# specific build dir, default current dir
 $ cmake -B <dir> 
 
-# specific generator to generate the build system in <dir>
-# must delete <dir> when switch <gen>
+# specific generator to generate the build system in <dir>, must delete <dir> when switch <gen>
 $ cmake  -G "<gen>" -B <dir>
 
-# run the build system in the build dir
-# single-config
+# run the build system in the build dir, single-config
 $ cmake --build <dir>
 
 # multi-configs
@@ -56,8 +54,9 @@ $ cmake --build <dir> --config <cfg>
 # clean when reorganization
 $ cmake --build build --clean-first
 ```
+<br>
 
-- **Example:**
+**Example:**
 ```bash
 $ cd project
 # project structure
@@ -71,8 +70,7 @@ $ tree
 $ cat HelloWorld.cxx
 #include <cstdio>
 
-int main()
-{
+int main() {
   std::printf("Hello World\n");
 }
 
@@ -99,57 +97,54 @@ Hello World
 ```
 
 ----
-
-
 ## 2. Getting Started
-- This section help us will be able to describe executables, libraries, source and header files, and the linkage relationship between them.
+This section help us will be able to describe `executables`, `libraries`, `source` and `header files`, and the `linkage relationship` between them.
 
-- A `CMakeLists.txt` (list file-CML) will exist within any directory where we want to provide instructions to CMake on how to handle files, and operations local to that dir or sub-dir.
-- There are four backbone commands of most CMake usage:
-    - `add_executable() and add_library()` for describing output artifacts the software project wants to produce
-    - `target_sources()` for associating input files with their respective output artifacts 
-    - `target_link_libraries()` for associating output artifacts with one another.
+A **CMakeLists.txt** (list file-CML) will exist within any directory where we want to provide instructions to CMake on how to handle files, and operations local to that dir or sub-dir.
+
+There are four backbone commands of most CMake usage:
+   - `add_executable()` and `add_library()` for describing **output artifacts** the software project wants to produce
+   - `target_sources()` for **associating input files** with their respective output artifacts 
+   - `target_link_libraries()` for associating **output artifacts** with one another.
 
   
 - Strongly recommend that the **project root CMakeLists.txt**
-```bash
-$ cat CMakeLists.txt
-
+**Example:**
+```cmake
 # should always contain these two commands at the top/near
 cmake_minium_required(VERSION 3.23)
 project(MyProjectName)
 ```
+<br>
 
 ### 2.1. Building an Executable
-- We need at least four commands:
-  - **cmake_minium_required(VERSION <min>)**
-  - **project(<name> VERSION <ver>)**
-  - **add_executable(<name>)**: create a target, we can now start associating properties with it like source files we want to build and link.
-  - **target_sources(<target>  {INTERFACE|PUBLIC|PRIVATE} <source>)**: add source to target 
-  
-- The scope keyword  for executable should always be **PRIVATE** 
-- e.g.
-```bash
-$ cat CMakeLists.txt
-# Set the minimum required version of CMake to be 3.23
-cmake_minimum_required(VERSION 3.23)
-# Create a project named Tutorial
-project(Tutorial)
+We need at least four commands:
+- **cmake_minium_required(VERSION `<min>`)**
+- **project(`<name>` VERSION <ver>)**
+- **add_executable(`<name>`)**: create a target, we can now start associating properties with it like source files we want to build and link.
+- **target_sources(`<target>`  {INTERFACE|PUBLIC|PRIVATE} `<source>`)**: add source to target
+   
+The scope keyword  for executable should always be **PRIVATE** 
+  **Example:**
+  ```cmake
+  # Set the minimum required version of CMake to be 3.23
+  cmake_minimum_required(VERSION 3.23)
+  # Create a project named Tutorial
+  project(Tutorial)
 
-# Add an executable target called Tutorial to the project
-add_executable(Tutorial)
-# Add the Tutorial/Tutorial.cxx source file to the Tutorial target
-target_sources(Tutorial
-        PRIVATE
-        Tutorial/Tutorial.cxx
-)
-```
-
+  # Add an executable target called Tutorial to the project
+  add_executable(Tutorial)
+  # Add the Tutorial/Tutorial.cxx source file to the Tutorial target
+  target_sources(Tutorial
+          PRIVATE
+          Tutorial/Tutorial.cxx
+  )
+  ```
+<br>
 
 ### 2.2. Building a Library
-- For example:
-```bash
-$ cat CMakeLists.txt
+**Example:**
+```cmake
 cmake_minimum_required(VERSION 3.23)
 project(example)
 
@@ -167,11 +162,12 @@ target_sources(Tutorial2
         Tutorial/Tutorial.cxx
 )
 ```
-=> Both Tutorial1 and Tutorial2 compile the same source file:
+=> Both `Tutorial1` and `Tutorial2` compile the same source file:
 
 - Use `add_library` to add a library to the project
 - Use a `FILE_SET` to describe a collection of header files in the `target_source`
-```bash
+**Example:**
+```cmake
 # Add a library called MyLibrary
 add_library(MyLibrary)
 
@@ -232,8 +228,8 @@ target_link_libraries(Tutorial2
 - Use `add_subdirectory(<subname>)` to incorporate the CLMs - CMakeLists.txt located in a subdirectory of the project.
 - The relative paths used inside that subdirectory's CMakeLists.txt are interpreted relative to that subdirectory.
 
-- e.g
-```bash
+**Example:**
+```cmake
 $ cd TutorialProject
 # project structure
 $ tree
@@ -292,136 +288,127 @@ target_sources(MathFunctions
 
 ----
 ## 3. CMake Language
-- The only fundamental types in CMake are:
-  -  `String`: e.g. "abc"
-  -  `Lists`: e.g. "abc;xyz"
-- `set()` command to create a variable as a name for string.
+The only **fundamental types** in CMake are:
+-  `String`: e.g. "abc"
+-  `Lists`: e.g. "abc;xyz"
+<br>
+
+**Commands:**
+- `set()` to create a variable as a name for string.
 - `${var}` to access variable's value
-- `message()` command to print 
+- `message()` to print 
 - `cmake -P CMakeLists.txt` to run the script mode (not intended to have build software)
+  ```bash
+  $ cat CMakeLists.txt
+  set(MYVAR "HelloWorld")
+  message(${MYVAR})
 
-e.g.
-```bash
-$ cat CMakeLists.txt
-set(MYVAR "HelloWorld")
-message(${MYVAR})
-
-$ cmake -P CMakeLists.txt
-HelloWorld
-```
+  $ cmake -P CMakeLists.txt
+  HelloWorld
+  ```
 
 - `list(APPEND list "new_item")` for manipulating the lists
 - `foreach(l IN LISTS lists)` to iterate over a list
-e.g.
-```bash
-$ cat CMakeLists.txt
-set(MYVAR "HelloWorld")
-message(${MYVAR})
+  ```bash
+  $ cat CMakeLists.txt
+  set(MYVAR "HelloWorld")
+  message(${MYVAR})
 
-# create a list
-set(lists "first;second;third") # or set(lists first second third)
-# manipulate the list
-list(APPEND lists "fourth")
-# print out
-message("This is my list: ${lists}")
-# iterate to print each item
-foreach(i IN LISTS lists)
-        message("item: ${i}")
-endforeach()
+  # create a list
+  set(lists "first;second;third") # or set(lists first second third)
+  # manipulate the list
+  list(APPEND lists "fourth")
+  # print out
+  message("This is my list: ${lists}")
+  # iterate to print each item
+  foreach(i IN LISTS lists)
+          message("item: ${i}")
+  endforeach()
 
-$ cmake -P CMakeLists.txt
-HelloWorld
-This is my list: first;second;third;fourth
-item: first
-item: second
-item: third
-item: fourth
-```
-
+  $ cmake -P CMakeLists.txt
+  HelloWorld
+  This is my list: first;second;third;fourth
+  item: first
+  item: second
+  item: third
+  item: fourth
+  ```
 - `macro(name args)` to create a macro
 - `function(name args)` to create a function
-e.g.
-```bash
-$ cat CMakeLists.txt
-# create a macro
-macro(myM arg)
-        message("myM called with arg: ${arg}")
-endmacro()
+  ```bash
+  $ cat CMakeLists.txt
+  # create a macro
+  macro(myM arg)
+          message("myM called with arg: ${arg}")
+  endmacro()
 
-# create a function
-function(myF arg)
-        message("myF called with arg:${arg}")
-        myM(${arg})
-endfunction()
+  # create a function
+  function(myF arg)
+          message("myF called with arg:${arg}")
+          myM(${arg})
+  endfunction()
 
-# call function
-myF("hello")
+  # call function
+  myF("hello")
 
-$ cmake -P CMakeLists.txt
-HelloWorld
-This is my list: first;second;third;fourth
-item: first
-item: second
-item: third
-item: fourth
-myF called with arg:hello
-myM called with arg: hello
-```
+  $ cmake -P CMakeLists.txt
+  HelloWorld
+  This is my list: first;second;third;fourth
+  item: first
+  item: second
+  item: third
+  item: fourth
+  myF called with arg:hello
+  myM called with arg: hello
+  ```
 - "True", "On", "Yes" as `true`
-e.g.
-```bash
-$ cat ConditionalValue.cmake
-if(True)
-  message("Constant Value: True")
-else()
-  message("Constant Value: False")
-endif()
+  ```bash
+  $ cat ConditionalValue.cmake
+  if(True)
+    message("Constant Value: True")
+  else()
+    message("Constant Value: False")
+  endif()
 
-if(ConditionalValue)
-  message("Undefined Variable: True")
-else()
-  message("Undefined Variable: False")
-endif()
+  if(ConditionalValue)
+    message("Undefined Variable: True")
+  else()
+    message("Undefined Variable: False")
+  endif()
 
-set(ConditionalValue True)
+  set(ConditionalValue True)
 
-if(ConditionalValue)
-  message("Defined Variable: True")
-else()
-  message("Defined Variable: False")
-endif()
+  if(ConditionalValue)
+    message("Defined Variable: True")
+  else()
+    message("Defined Variable: False")
+  endif()
 
-$ cmake -P ConditionalValue.cmake
-Constant Value: True
-Undefined Variable: False
-Defined Variable: True
-
-```
+  $ cmake -P ConditionalValue.cmake
+  Constant Value: True
+  Undefined Variable: False
+  Defined Variable: True
+  ```
 
 - We can organize the project let functions and utilities live in their own `.cmake` files outside the project CMLs and separate from the rest of the build system.
 - We use the `include()` command to incorporate these separate ones.
-```bash
-include(module1.cmake)
-include(module2.cmake)
-```
+  ```bash
+  include(module1.cmake)
+  include(module2.cmake)
+  ```
 
 ----
-
 ## 4. Configuration And Cache Variables
 ### 4.1. Cache and normal variables
-- A CMake Cache variables are globally visible variables and persistent vars stored in CMakeCache.
+A **CMake Cache variables** are globally visible variables and persistent vars stored in CMakeCache.
 - They are mainly used to configure build options and allow users to customize the build.
-  - `-D<var>:<type>=<value>`
-    Create or update a cache entry from the command line.
-  - `option()`
-    Define a boolean cache variable and provide a default value.
-  - `set(<var> <value> CACHE <type> <docstring>)`
-    Create or update a cache variable, but it will not overwrite a value that was already set by the user via `-D`.
-  - `set()` / `unset()`
-    Create or remove a normal variable that temporarily shadows the cache variable.
+  - `-D<var>:<type>=<value>`: create/update a cache entry from the command line.
+  - `option()`: define a boolean cache variable and provide a default value.
+  - `set(<var> <value> CACHE <type> <docstring>)`: create/update a cache variable, but it will not overwrite a value that was already set by the user via `-D`.
+  - `set()` / `unset()`: create/remove a normal variable that temporarily shadows the cache variable.
 
-- e.g.
-```bash
+**Example:**
+```cmake
 $ tree
 .
 ├── CMakeLists.txt
@@ -460,67 +447,66 @@ $ cat build/CMakeCache.txt
 // Build the Tutorial executable des
 TUTORIAL_BUILD_UTILITIES:BOOL=false
 ```
-
 - `CMAKE_CXX_STANDARD`: C++ standard
+<br>
 
 ### 4.2. CMakePresets.json
-- CMake Presets is a CMake's built-in way to define reuseable and flexible build configurations
+**CMake Presets** is a CMake's built-in way to define reuseable and flexible build configurations
 - This mechanism let us store build configurations in a file
   - `CMakePresets.json`: for the project and tracked in source control
   - `CMakeUserPresets.json`: for local user config
 
 - We previously running a long commands likes:
-```bash
-cmake -B build -DEXAMPLE_FOO=Bar -DEXAMPLE_QUX=Baz
-```
+  ```bash
+  cmake -B build -DEXAMPLE_FOO=Bar -DEXAMPLE_QUX=Baz
+  ```
 - We can now create a `CMakePresents.json` in the CML's folder.
-```json
-{
-    "version":4,
-    "configurePresets":[
-     {
-        "name": "example-preset", // preset name
-        // "binaryDir": "${sourceDir}/build" // set the build dir to skip -B flag
-        "cacheVariables": { // var configs
-            "EXAMPLE_FOO": "Bar",
-            "EXAMPLE_QUX": "Baz"
-        }
-     }
-    ]
-}
-
-// Template:
-{
-  "version": 4,
-  "configurePresets": [
-    {
-      "name": "example-preset",
-      "cacheVariables": {
-        "EXAMPLE_FOO": "Bar",
-        "EXAMPLE_QUX": "Baz"
+  ```json
+  {
+      "version":4,
+      "configurePresets":[
+      {
+          "name": "example-preset", // preset name
+          // "binaryDir": "${sourceDir}/build" // set the build dir to skip -B flag
+          "cacheVariables": { // var configs
+              "EXAMPLE_FOO": "Bar",
+              "EXAMPLE_QUX": "Baz"
+          }
       }
-    }
-  ]
-}
-```
-then use the preset:
-```bash
-cmake -B build --preset example-preset
-```
+      ]
+  }
 
+  // Template:
+  {
+    "version": 4,
+    "configurePresets": [
+      {
+        "name": "example-preset",
+        "cacheVariables": {
+          "EXAMPLE_FOO": "Bar",
+          "EXAMPLE_QUX": "Baz"
+        }
+      }
+    ]
+  }
+  ```
+then use the preset:
+  ```bash
+  cmake -B build --preset example-preset
+  ```
 ----
 
 ## 5. CMake Target Commands
-- A target command is one which modifies the properties of the target it is applied to.
+**A target command** is one which modifies the properties of the target it is applied to.
 - There are several target commands
   - Common/Recommended: `target_compile_definitions()` `target_compile_features()` `target_link_libraries()` `target_sources()`
   - Advanced/Caution: `get_target_property()` `set_target_properties()` `target_compile_options()` `target_link_options()` `target_precompile_headers()`
   - Esoteric/Footguns: `target_include_directories()` `target_link_directories()`
 
 ### 5.1. set_target_property - get_target_properties
-- They give direct access to a target's properties by name
-- e.g.
-```bash
+To give direct access to a target's properties by name
+**Example:**
+```cmake
 $ cat CMakeLists.txt
 add_library(mylib)
 # set properties to the target
@@ -544,15 +530,28 @@ Key1: Value1
 ```
 
 ### 5.2. target_precompile_headers
-- It takes a list of header files, and creates a precompiled header from them.
-- TBD
+It creates a precompiled header (PCH) from a list of commonly included header files.
+- Reduces compilation time by compiling these headers only once instead of for every source file.
+- Most effective for large C++ projects where many source files include the same standard or third-party headers.
+- Should contain stable headers that change infrequently (e.g., `<vector>`, `<string>`, `<memory>`, Qt, Boost, or other library headers).
+- Avoid placing project headers that change often, as modifying them forces the PCH to be rebuilt.
+
+**Example:**
+  ```cmake
+  target_precompile_headers(my_app PRIVATE
+      <vector>
+      <string>
+      <memory>
+      <unordered_map>
+  )
+  ```
 
 ### 5.3. target_compile_features - target_compile_definitions
-- These two commands are using to communicate language standard and compile definition requirements for the target.
+These commands are using to communicate language standard and compile definition requirements for the target.
   - `Feature` command describes a minimum language standard as a target property.
   - `Definition` command describes compile definitions as target properties.
-- e.g.
-```bash
+**Example:**
+```cmake
 target_compile_features(MyTarget PRIVATE cxx_std_20) # std20
 
 target_compile_definitions(MyTarget PRIVATE MY_DEFINITION)
@@ -563,9 +562,9 @@ target_compile_definitions(MyTarget PRIVATE MY_DEFINITION)
 ```
 
 ### 5.4. target_compile_options - target_link_options
-- These two commands are using to specific the options being passed on the compile and link line.
-- e.g.
-```bash
+These two commands are using to specific the options being passed on the compile and link line.
+**Example:**
+```cmake
 # Enable warnings when compiling the code
 if(
   (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") OR
@@ -583,10 +582,9 @@ endif()
 ```
  
 ### 5.4. target_link_directories - target_include_directories
-- These two commands specify directories used during compilation and linking, and map to the `-L` (.a, .so, .lib, .dll) and `-I` (.h, .hpp) compiler flags. 
-- These commands are typically used when integrating a precompiled or vendored library into a project.
-- e.g.
-```bash
+These two commands specify directories used during compilation and linking, and map to the `-L` (.a, .so, .lib, .dll) and `-I` (.h, .hpp) compiler flags, typically used when integrating a precompiled or vendored library into a project.
+**Example:**
+```cmake
 Vendor$ tree
 .
 ├── CMakeLists.txt
@@ -631,7 +629,7 @@ target_link_libraries(VendorLib
 ----
 
 ## 6. CMake Library Concepts
-- There is an optional argument in `add_library(<name> <type>)` command, it's <type>
+There is an optional argument in `add_library(<name> <type>)` command, it's <type>
   - `STATIC`: an archive of object files for use when linking other targets. (.a)
   - `SHARED`: a dynamic library that maybe linked by other targets and loaded at runtime. (.so)
   - `MODULE`
@@ -639,9 +637,9 @@ target_link_libraries(VendorLib
   - `INTERFACE`: a library target which specifies usage requirements for dependents but does not compile sources and does not produce a library artifact on disk.
   
 ### 6.1. Static and Shared
-- When not given a type, `add_library` will create either a STATIC or SHARED library depending on the `BUILD_SHARED_LIBS`
-- e.g.
-```bash
+When not given a type, `add_library` will create either a **STATIC** or **SHARED** library depending on the `BUILD_SHARED_LIBS`
+**Example:**
+```cmake
 add_library(MyLib-static STATIC)
 add_library(MyLib-shared SHARED)
 
@@ -650,10 +648,10 @@ add_library(MyLib)
 ```
 
 ### 6.2 Interface Libraries
-- Interface libraries are those which only communicate usage requirements for other targets, they do not produce any artifacts.
+**Interface libraries** are those which only communicate usage requirements for other targets, they do not produce any artifacts.
 - It's use to create a header-only library, providing the necessary flags for the executable.
-- e.g.
-```bash
+**Example:**
+```cmake
 $ cat MathFunctions/MathLogger/CMakeLists.txt¶
 add_library(MathLogger INTERFACE)
 
@@ -675,15 +673,14 @@ $ cat MathFunctions/file.cpp
 ----
 
 ## 7. System Introspection
-- CMake provides modules to simplify checks.
-  - CheckIncludeFiles: check one ore more C/C++ header files
-  - CheckCompileFlag: check whether compiler supports a given flag
-  - CheckSourceCompiles: check whether source code can be built for a given language
-  - CheckIPOSupported: interprocedural optimization
+CMake provides modules to simplify checks.
+- `CheckIncludeFiles`: check one ore more C/C++ header files
+- `CheckCompileFlag`: check whether compiler supports a given flag
+- `CheckSourceCompiles`: check whether source code can be built for a given language
+- `CheckIPOSupported`: interprocedural optimization
 
-- e.g.
-```bash
-$ cat CMakeLists.txt
+**Example:**
+```cmake
 include(CheckIncludeFiles)
 check_include_files(emmintrin.h HAS_EMMINTRIN LANGUAGE CXX)
 
@@ -705,8 +702,8 @@ $ cat test.cpp
 - `add_custom_target()`: Add a target with no output so it will always be built.
 - `CMAKE_CURRENT_BINARY_DIR`: The path to the binary directory currently being processed.
 
-- e.g.
-```bash
+**Example:**
+```cmake
 $ tree
 .
 ├── CMakeLists.txt
@@ -810,14 +807,14 @@ double sqrtTable[] = {
 ----
 
 ## 9. Testing and CTest
-- CTest is a task launcher which runs commands and reports if they have returned value.
+CTest is a task launcher which runs commands and reports if they have returned value.
 - `enable_testing()`: Enables testing for the current directory
 - `add_test()`: Add a test to the project to be run by `ctest`.
 - `ctest --test-dir build`: To run ctest directly on the build dir with all available tests.
 - `ctest --test-dir build -R specific_test`: with regular expressions
 
-- e.g.
-```bash
+**Example:**
+```cmake
 $ cat CMakeLists.txt
 option(BUILD_TESTING "Enable testing and build tests" ON)
 if(BUILD_TESTING)
@@ -857,8 +854,9 @@ $ ctest --test-dir build -R sqrt # run sqrt test
 ## 10. Installation Commands and Concepts
 [TBD](https://cmake.org/cmake/help/latest/guide/tutorial/Installation%20Commands%20and%20Concepts.html)
 
+---
 ## 11. Finding Dependencies
-- CMake provides an extensive toolset for discovering and validating dependencies of different kinds.
+CMake provides an extensive toolset for discovering and validating dependencies of different kinds.
 - `find_package()` to import dependencies into the project.
   - <version> arg
   - `REQUIRED`: for non-optional dep which should abort  the build if not found
