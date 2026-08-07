@@ -11,16 +11,16 @@ ShowToc: true    # Determines whether to display the Table of Contents (TOC) for
 TocOpen: true    # Controls whether the TOC is expanded when the post is loaded. 
 weight: 10   # The order in which the post appears in a list of posts. Lower numbers make the post appear earlier.
 ---
-## 1. Introduce
-CI/CD is a continuous method of software development, where you continuously build, test, deploy, and monitor iterative code changes.
+## 1. Introduction
+**CI/CD** is a continuous method of software development, where you continuously build, test, deploy, and monitor iterative code changes.
 - **CI - Continue Integration** used to make sure new code integrates cleanly with the existing codebase. (Can this code be safely merged?)
 - **CD - Continue Delivery / Continues Deployment** used to handle releasing the software
-  - Continuous Delivery: The system automatically prepares a release, but deployment to production requires manual approval.
-  - Continuous Deployment: Everything is automatic.
+  - **Continuous Delivery:** The system automatically prepares a release, but deployment to production requires manual approval.
+  - **Continuous Deployment:** Everything is automatic.
 
-- Example:
+**Example:**
 ```bash
-Developer pushes code
+**Developer pushes code**
         │
         v
       [ CI ]
@@ -31,7 +31,7 @@ Developer pushes code
         └─ Notify results #Build status (Pass/Fail)
         │
         v
-    CI Passed
+    **CI Passed**
         │
         ▼
       [ CD ]
@@ -42,17 +42,18 @@ Developer pushes code
         └─ Automatic deployment (Continuous Deployment) #Production environment updated
         │
         v
-      Release
+      **Release**
 ```
+<br>
 
+---
 ## 2. GitLab CI/CI
 ### Concepts:
-- **Job** is an individual task within a pipeline, such as building the project, running tests, or deploying an application.
+- **Job** is an individual task within a pipeline, such as building the project, running tests, or deploying an application. For example, a job can compile or test code.
 - **Pipeline** is an automated workflow consisting of multiple stages and jobs that build, test, and deploy code changes.
 - **Runner** is an agent that picks up and executes the jobs, it can run on physical machines or virtual instances. 
-- **Agent** is a program or service that performs tasks on behalf of another system. (Gitlab Runner, Github Action Runner, Kubernetes Agent ...)
-- **Jobs** specify the tasks to be performed in each stage. For example, a job can compile or test code.
-- **Stages** define the order of execution. Typical stages might be build, test, and deploy.
+- **Agent** is a program or service that performs tasks on behalf of another system. (`Gitlab Runner, Github Action Runner, Kubernetes Agent ...`)
+- **Stages** define the order of execution. Typical stages might be `build`, `test`, and `deploy`.
 - **Component** is a reuseable pipeline configuration unit to compose an entire pipeline configuration or a small part of a larger pipeline. 
 
 ### Step 1: Configure pipeline

@@ -73,7 +73,7 @@ main.cpp
 
 ---
 ## 2. Linkage
-- An identifier's linkage determines whether a declaration of that same identifier in a different scope refers to the same entity (object, function, reference,..) or not.
+- **An identifier's linkage** determines whether a declaration of that same identifier in a different scope refers to the same entity (object, function, reference,..) or not.
 - An identifier with **no linkage** means another declaration of the same identifier refers to a unique entity. 
   - Local variables
   - Program-defined type identifiers (such as enums and classes) declared inside a block
@@ -177,21 +177,21 @@ main.cpp
 ---
 ## 4. Sharing Global Constants
 ### 4.1. Global Constants As inline Variables 
-    ```cpp
-    // constants.h:============================================================
-    #ifndef CONSTANTS_H
-    #define CONSTANTS_H
+  ```cpp
+  // constants.h:============================================================
+  #ifndef CONSTANTS_H
+  #define CONSTANTS_H
 
-    // define your own namespace to hold constants
-    namespace constants
-    {
-        inline constexpr double pi { 3.14159 };
-    }
-    #endif
+  // define your own namespace to hold constants
+  namespace constants
+  {
+      inline constexpr double pi { 3.14159 };
+  }
+  #endif
 
-    // main.cpp::============================================================
-    #include "constants.h"
-    ```
+  // main.cpp::============================================================
+  #include "constants.h"
+  ```
   - Prefer defining inline constexpr global variables in a header file.
   - **Advantages**:
     - Can be used in constant expressions in any translation unit that includes them.
@@ -201,24 +201,25 @@ main.cpp
     - Changing anything in the header file requires recompiling files including the header.
 <br>
 
-### 4.2. Global Constants As Internal Variables 
-    ```cpp
-    // constants.h:============================================================
-    #ifndef CONSTANTS_H
-    #define CONSTANTS_H
+### 4.2. Global Constants As Internal Variables
 
-    // Define your own namespace to hold constants
-    namespace constants
-    {
-        // Global constants have internal linkage by default
-        constexpr double pi { 3.14159 };
-    }
-    #endif
+  ```cpp
+  // constants.h:============================================================
+  #ifndef CONSTANTS_H
+  #define CONSTANTS_H
 
-    // main.cpp::============================================================
-    #include "constants.h" // include a copy of each constant in this file
-    #include <iostream>
-    ```
+  // Define your own namespace to hold constants
+  namespace constants
+  {
+      // Global constants have internal linkage by default
+      constexpr double pi { 3.14159 };
+  }
+  #endif
+
+  // main.cpp::============================================================
+  #include "constants.h" // include a copy of each constant in this file
+  #include <iostream>
+  ```
 
   - **Advantages**:
     - Works prior to C++16.
